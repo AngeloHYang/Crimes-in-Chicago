@@ -1,0 +1,4 @@
+fbprophet
+numpy
+matplotlib
+pandas

@@ -7,3 +7,6 @@ To save space, the dataset was not uploaded to GitHub repository.
 
 Check out about it [here](./Data/README.md).
 
+## Requirments
+
+To installed packages required for machine learning, you need to head down [here](./Deployment/README.md)
