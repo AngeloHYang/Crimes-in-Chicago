@@ -1,4 +1,4 @@
-fbprophet
 numpy
 matplotlib
 pandas
+
