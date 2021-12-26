@@ -1,7 +1,12 @@
+'''
+    Entry of the Web App
+'''
+
 import streamlit as st
 import gettext
 from init import init_app
 from introduction import introductionPage
+import customVariableManagement as cvm
 
 init_app()
 

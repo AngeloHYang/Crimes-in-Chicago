@@ -1,6 +1,16 @@
+'''
+    App initalization
+'''
+
 import streamlit as st
 import gettext
+import customVariableManagement as cvm
 
+# just for code testing
+def test():
+    pass
+
+# Basic Initialization of the Page
 def init_page():
     # Set Page Config
     st.set_page_config(page_title="Thefts in Chicago Prediction", page_icon="./Resources/Logo/Logo_1.png", layout='centered', initial_sidebar_state='auto', menu_items=None)
@@ -23,6 +33,7 @@ def init_page():
     #st.markdown(hide_streamlit_header, unsafe_allow_html=True)
 
 def init_app():
+    test()
+    cvm.init_cvm()
     init_page()
-
     st.balloons()

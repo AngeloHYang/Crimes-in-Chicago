@@ -1,3 +1,7 @@
+'''
+    Introduction Page
+'''
+
 import streamlit as st
 
 def introductionPage():
