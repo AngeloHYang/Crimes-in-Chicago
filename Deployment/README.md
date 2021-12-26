@@ -26,6 +26,10 @@ Install fbprophet with:
 
 `conda install -c conda-forge fbprophet`
 
+Install gettext with:
+
+`conda install gettext
+
 You can install required packages via:
 
 `pip install -r Requirements.txt `

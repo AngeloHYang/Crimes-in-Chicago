@@ -1,8 +1,9 @@
 import streamlit as st
+import gettext
 
 def init_page():
     # Set Page Config
-    st.set_page_config(page_title="Thefts in Chicago Prediction", page_icon=None, layout='centered', initial_sidebar_state='auto', menu_items=None)
+    st.set_page_config(page_title="Thefts in Chicago Prediction", page_icon="./Resources/Logo/Logo_1.png", layout='centered', initial_sidebar_state='auto', menu_items=None)
 
     # Hide Streamlit Footer(aka the settings button)
     hide_streamlit_footer = """
@@ -23,3 +24,5 @@ def init_page():
 
 def init_app():
     init_page()
+
+    st.balloons()
