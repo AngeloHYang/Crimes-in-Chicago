@@ -20,7 +20,7 @@ def init_page():
         header {visibility: hidden;}
     </style>
     """
-    st.markdown(hide_streamlit_header, unsafe_allow_html=True)
+    #st.markdown(hide_streamlit_header, unsafe_allow_html=True)
 
 def init_app():
     init_page()
