@@ -9,4 +9,6 @@ def introductionPage():
 
     st.markdown("This project is based on Chicago's crime data from 2005 to 2016. The model used to predict was Prophet by Facebook.")
 
+    st.markdown("You shouldn't count on the results from this project. ")
+
     st.markdown("Now you can check it out through the **navigation bar** on the left.")
