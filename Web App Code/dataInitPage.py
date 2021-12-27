@@ -7,12 +7,15 @@ import dataAccess
 
 import time
 
-def writeStatus(value):
+# show error is specific for creating file failed
+def writeStatus(value, show_error = False):
     statusEmpty = st.empty()
     if (value == True):
        statusEmpty.success("Here!")
-    else:
+    elif show_error == False:
         statusEmpty.error("Not detected!")
+    else:
+        statusEmpty.error("I/O error!")
     return statusEmpty
 
 def dataInitPage():
@@ -51,13 +54,13 @@ def dataInitPage():
                         with st.spinner("Creating commonly used DataFrames..."):
                             dataAccess.load_fullData()
                             creationStatus = dataAccess.create_DataFrames()
-                        dfStatusST = writeStatus(creationStatus)
+                        dfStatusST = writeStatus(creationStatus, True)
                 if modelStatus == False:
                     with modelStatusST:
                         with st.spinner("Creating Prediction Models"):
                             creationStatus = dataAccess.create_models()
                             dataAccess.close_fullData()
-                        modelStatusST = writeStatus(creationStatus)
+                        modelStatusST = writeStatus(creationStatus, True)
                         
                 st.experimental_rerun()
             else:

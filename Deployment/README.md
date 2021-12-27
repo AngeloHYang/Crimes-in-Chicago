@@ -33,3 +33,7 @@ Install gettext with:
 You can install required packages via:
 
 `pip install -r Requirements.txt `
+
+## Data Analysis Extra Requirementshere
+
+The Jupyter Notebook about Data Analysis of Thefts in Chicago locates [here](../Data Analysis Code/). Obviously you'll need Jupiter Notebook in order to run it.

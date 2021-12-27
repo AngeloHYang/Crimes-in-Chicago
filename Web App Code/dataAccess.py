@@ -9,6 +9,7 @@ import pandas as pd
 import gc
 import math
 import random
+import time
 from datetime import datetime
 
 # To load full data files into system memory. 
@@ -16,6 +17,9 @@ from datetime import datetime
 Crime_data, df = None, None
 def load_fullData():
     global Crime_data, df
+    
+    Crime_data = None
+    df = None
     
     # Reading and processing data
     ## Getting crime_data
@@ -68,7 +72,8 @@ def load_fullData():
 # Don't forget to close_data when no longer in use
 def close_fullData():
     global Crime_data, df
-    del Crime_data, df
+    Crime_data = None
+    df = None
 
 ## Data File Related
 DataPath = "../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/"
@@ -90,11 +95,46 @@ def check_dataFiles():
 
 
 ## Comoonly used DataFrame Related
+DataFramePath = "./DataFrames/"
+#You'll need to add .csv when accessing in data
+DataFrame = [
+    "CrimeCountByHour", 
+    "CrimeCountByYearByLocationDescription", 
+    "DistrictToCoordinates_max", 
+    "DistrictToCoordinates_min", 
+    "DistrictToCoordinates_mean", 
+    "CrimeCountByDistrict", 
+    "CrimeCountByStreet", 
+    "StreetNameToCoordinates_max", 
+    "StreetNameToCoordinates_min", 
+    "StreetNameToCoordinates_mean", 
+    "CrimeCountByBlock", 
+    "BlockNameToCoordinates_max", 
+    "BlockNameToCoordinates_min", 
+    "BlockNameToCoordinates_mean", 
+    "CrimeCountByWard", 
+    "WardToCoordinates_max", 
+    "WardToCoordinates_min", 
+    "WardToCoordinates_mean", 
+    "CrimeCountByCommunityArea", 
+    "CommunityAreaToCoordinates_max", 
+    "CommunityAreaToCoordinates_min", 
+    "CommunityAreaToCoordinates_mean"]
 def check_DataFrames():
-    return False
+    if not os.path.exists(DataFramePath) or not os.path.isdir(DataFramePath):
+        return False
+        
+    Exist = True
+    for i in DataFrame:
+        filename = i + ".csv"
+        if not os.path.exists(DataFramePath + filename) or not os.path.isfile(DataFramePath + filename):
+            Exist = False
+            break
+    return Exist
 
 def create_DataFrames():    
     global Crime_data, df
+    startTime = time.time()
     
     # Getting needed dataframes
     ## Crime count by primary types in each hour
@@ -119,15 +159,61 @@ def create_DataFrames():
     StreetNameToCoordinates_min = (newPd[['Street', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Street']).min()
     StreetNameToCoordinates_mean = (newPd[['Street', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Street']).mean()
     ## Block
-    
-    
-    
+    CrimeCountByBlock = pd.crosstab(Crime_data['Block'], Crime_data['Primary Type'])
+    BlockNameToCoordinates_max = (df[['Block', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Block']).max()
+    BlockNameToCoordinates_min = (df[['Block', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Block']).min()
+    BlockNameToCoordinates_mean = (df[['Block', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Block']).mean()
+    ## Ward
+    CrimeCountByWard = pd.crosstab(Crime_data['Ward'], Crime_data['Primary Type'])
+    WardToCoordinates_max = (df[['Ward', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Ward']).max()
+    WardToCoordinates_min = (df[['Ward', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Ward']).min()
+    WardToCoordinates_mean = (df[['Ward', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Ward']).mean()
+    ## Community Area
+    CrimeCountByCommunityArea = pd.crosstab(Crime_data['Community Area'], Crime_data['Primary Type'])
+    CommunityAreaToCoordinates_max = (df[['Community Area', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Community Area']).max()
+    CommunityAreaToCoordinates_min = (df[['Community Area', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Community Area']).min()
+    CommunityAreaToCoordinates_mean = (df[['Community Area', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Community Area']).mean()
     
     
     # Saving needed dataframes
+    dataHandlingEndTime = time.time()
     
+    if not os.path.exists(DataFramePath):
+        os.makedirs(DataFramePath)
     
-    del df, Crime_data # To close the file
+    CrimeCountByHour.to_csv(DataFramePath + "CrimeCountByHour.csv")
+    CrimeCountByYearByLocationDescription.to_csv(DataFramePath + "CrimeCountByYearByLocationDescription.csv")
+    DistrictToCoordinates_max.to_csv(DataFramePath + "DistrictToCoordinates_max.csv")
+    DistrictToCoordinates_min.to_csv(DataFramePath + "DistrictToCoordinates_min.csv")
+    DistrictToCoordinates_mean.to_csv(DataFramePath + "DistrictToCoordinates_mean.csv")
+    CrimeCountByDistrict.to_csv(DataFramePath + "CrimeCountByDistrict.csv")
+    CrimeCountByStreet.to_csv(DataFramePath + "CrimeCountByStreet.csv")
+    StreetNameToCoordinates_max.to_csv(DataFramePath + "StreetNameToCoordinates_max.csv")
+    StreetNameToCoordinates_min.to_csv(DataFramePath + "StreetNameToCoordinates_min.csv")
+    StreetNameToCoordinates_mean.to_csv(DataFramePath + "StreetNameToCoordinates_mean.csv")
+    CrimeCountByBlock.to_csv(DataFramePath + "CrimeCountByBlock.csv")
+    BlockNameToCoordinates_max.to_csv(DataFramePath + "BlockNameToCoordinates_max.csv")
+    BlockNameToCoordinates_min.to_csv(DataFramePath + "BlockNameToCoordinates_min.csv")
+    BlockNameToCoordinates_mean.to_csv(DataFramePath + "BlockNameToCoordinates_mean.csv")
+    CrimeCountByWard.to_csv(DataFramePath + "CrimeCountByWard.csv")
+    WardToCoordinates_max.to_csv(DataFramePath + "WardToCoordinates_max.csv")
+    WardToCoordinates_min.to_csv(DataFramePath + "WardToCoordinates_min.csv")
+    WardToCoordinates_mean.to_csv(DataFramePath + "WardToCoordinates_mean.csv")
+    CrimeCountByCommunityArea.to_csv(DataFramePath + "CrimeCountByCommunityArea.csv")
+    CommunityAreaToCoordinates_max.to_csv(DataFramePath + "CommunityAreaToCoordinates_max.csv")
+    CommunityAreaToCoordinates_min.to_csv(DataFramePath + "CommunityAreaToCoordinates_min.csv")
+    CommunityAreaToCoordinates_mean.to_csv(DataFramePath + "CommunityAreaToCoordinates_mean.csv")
+    
+    savingEndTime = time.time()
+    readmeFile = open(DataFramePath + "README.txt",'w')
+    readmeFile.write("Creation Start Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(startTime)))
+    readmeFile.write("Creation End Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(dataHandlingEndTime)))
+    readmeFile.write("Saving Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(savingEndTime)))
+    readmeFile.write("Time spent on generating: " + time.strftime("%H:%M:%S", time.gmtime(dataHandlingEndTime - startTime)))
+    readmeFile.write("Time spent on saving: " + time.strftime("%H:%M:%S", time.gmtime(savingEndTime - dataHandlingEndTime)))
+    
+    readmeFile.close()
+    del df, Crime_data # To release memory
     return check_DataFrames()
 
 
