@@ -43,4 +43,8 @@ def init_app():
         dataInitPage()
         
     test()
-    st.balloons()
+
+    # To make sure you'll only see balloons at first
+    if 'welcomeBalloonsPlayed' not in st.session_state or st.session_state['welcomeBalloonsPlayed' ] == False:
+        st.balloons()
+        st.session_state['welcomeBalloonsPlayed' ] == True
