@@ -16,6 +16,7 @@ from datetime import datetime
 # To use Crime_data and df, you need to global Crime_data, df
 Crime_data, df = None, None
 def load_fullData():
+    print("\nLoading full file data:")
     global Crime_data, df
     
     Crime_data = None
@@ -24,9 +25,9 @@ def load_fullData():
     # Reading and processing data
     ## Getting crime_data
     print("Loading datafiles...", end="")
-    Crime_2005_to_2007 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2005_to_2007.csv", error_bad_lines=False)
-    Crime_2008_to_2011 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2008_to_2011.csv", error_bad_lines=False)
-    Crime_2012_to_2017 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2012_to_2017.csv", error_bad_lines=False)
+    Crime_2005_to_2007 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2005_to_2007.csv", on_bad_lines='skip')
+    Crime_2008_to_2011 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2008_to_2011.csv", on_bad_lines='skip')
+    Crime_2012_to_2017 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2012_to_2017.csv", on_bad_lines='skip')
     print("Done!")
     ## Combining crime_data
     print("Combining crime_data...", end="")
@@ -65,15 +66,16 @@ def load_fullData():
     df = pd.DataFrame(Crime_data)
     gc.collect()
     print(Crime_data.info())
-    
-    
-    
-   
+    print("Loading full file data done!\n")
+
+
 # Don't forget to close_data when no longer in use
 def close_fullData():
     global Crime_data, df
+    print("Releasing full data memory usage...", end="")
     Crime_data = None
     df = None
+    print("Done!")
 
 ## Data File Related
 DataPath = "../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/"
@@ -92,6 +94,7 @@ def check_dataFiles():
                 FileExist = False
                 break
     return FileExist
+
 
 
 ## Comoonly used DataFrame Related
@@ -135,8 +138,11 @@ def check_DataFrames():
 def create_DataFrames():    
     global Crime_data, df
     startTime = time.time()
+
+    print("\nCreating DataFrames:")
     
     # Getting needed dataframes
+    print("Generating dataframes in memory...", end="")
     ## Crime count by primary types in each hour
     CrimeCountByHour = pd.crosstab(Crime_data['Date'].dt.floor('h'), Crime_data['Primary Type'])
         # You can easily get by day and by year, so it won't be necessary to save them
@@ -173,11 +179,12 @@ def create_DataFrames():
     CommunityAreaToCoordinates_max = (df[['Community Area', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Community Area']).max()
     CommunityAreaToCoordinates_min = (df[['Community Area', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Community Area']).min()
     CommunityAreaToCoordinates_mean = (df[['Community Area', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Community Area']).mean()
-    
+    print("Done!")
     
     # Saving needed dataframes
     dataHandlingEndTime = time.time()
     
+    print("Saving DataFrames readme file...", end="")
     if not os.path.exists(DataFramePath):
         os.makedirs(DataFramePath)
     
@@ -203,14 +210,17 @@ def create_DataFrames():
     CommunityAreaToCoordinates_max.to_csv(DataFramePath + "CommunityAreaToCoordinates_max.csv")
     CommunityAreaToCoordinates_min.to_csv(DataFramePath + "CommunityAreaToCoordinates_min.csv")
     CommunityAreaToCoordinates_mean.to_csv(DataFramePath + "CommunityAreaToCoordinates_mean.csv")
+    print("Done!")
     
     savingEndTime = time.time()
+    print("Generating DataFrames readme file...", end="")
     readmeFile = open(DataFramePath + "README.txt",'w')
-    readmeFile.write("Creation Start Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(startTime)))
-    readmeFile.write("Creation End Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(dataHandlingEndTime)))
-    readmeFile.write("Saving Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(savingEndTime)))
-    readmeFile.write("Time spent on generating: " + time.strftime("%H:%M:%S", time.gmtime(dataHandlingEndTime - startTime)))
-    readmeFile.write("Time spent on saving: " + time.strftime("%H:%M:%S", time.gmtime(savingEndTime - dataHandlingEndTime)))
+    readmeFile.write("Creation Start Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(startTime)) + "\n")
+    readmeFile.write("Creation End Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(dataHandlingEndTime)) + "\n")
+    readmeFile.write("Saving Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(savingEndTime)) + "\n")
+    readmeFile.write("Time spent on generating: " + time.strftime("%H:%M:%S", time.gmtime(dataHandlingEndTime - startTime)) + "\n")
+    readmeFile.write("Time spent on saving: " + time.strftime("%H:%M:%S", time.gmtime(savingEndTime - dataHandlingEndTime)) + "\n")
+    print("Done!")
     
     readmeFile.close()
     del df, Crime_data # To release memory
