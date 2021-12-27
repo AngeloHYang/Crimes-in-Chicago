@@ -49,12 +49,14 @@ def dataInitPage():
                     ## If there's no dataframes commonly used, we'll create them
                     with dfStatusST:
                         with st.spinner("Creating commonly used DataFrames..."):
+                            dataAccess.load_fullData()
                             creationStatus = dataAccess.create_DataFrames()
                         dfStatusST = writeStatus(creationStatus)
                 if modelStatus == False:
                     with modelStatusST:
                         with st.spinner("Creating Prediction Models"):
                             creationStatus = dataAccess.create_models()
+                            dataAccess.close_fullData()
                         modelStatusST = writeStatus(creationStatus)
                         
                 st.experimental_rerun()
