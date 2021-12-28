@@ -21,8 +21,9 @@ def writeStatus(value, show_error = False):
 def dataInitPage():
     st.session_state['dataInitDone'] = False # To make sure the system doesn't enter home page until data Init is done
     
-    dfStatus = dataAccess.check_DataFrames()
+    dfStatus = dataAccess.check_dataFrames()
     modelStatus = dataAccess.check_models()
+    graphStatus = dataAccess.check_preparedGraphs()
     
     if dfStatus == True and modelStatus == True:
         print("Here!")
@@ -35,6 +36,9 @@ def dataInitPage():
         with name_col:
             st.write("")
             st.write("Commonly used DataFrames")
+            st.write("")
+            st.write("")
+            st.write("Prepared graphs")
             st.write("")
             st.write("")
             st.write("Prediction Models")
@@ -53,7 +57,7 @@ def dataInitPage():
                     with dfStatusST:
                         with st.spinner("Creating commonly used DataFrames..."):
                             dataAccess.load_fullData()
-                            creationStatus = dataAccess.create_DataFrames()
+                            creationStatus = dataAccess.create_dataFrames()
                         dfStatusST = writeStatus(creationStatus, True)
                 if modelStatus == False:
                     with modelStatusST:

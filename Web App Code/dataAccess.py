@@ -123,7 +123,7 @@ DataFrame = [
     "CommunityAreaToCoordinates_max", 
     "CommunityAreaToCoordinates_min", 
     "CommunityAreaToCoordinates_mean"]
-def check_DataFrames():
+def check_dataFrames():
     if not os.path.exists(DataFramePath) or not os.path.isdir(DataFramePath):
         return False
         
@@ -135,7 +135,7 @@ def check_DataFrames():
             break
     return Exist
 
-def create_DataFrames():    
+def create_dataFrames():    
     global Crime_data, df
     startTime = time.time()
 
@@ -224,8 +224,13 @@ def create_DataFrames():
     
     readmeFile.close()
     del df, Crime_data # To release memory
-    return check_DataFrames()
+    return check_dataFrames()
 
+
+## Prepared graphs
+PreparedGraphPath = "./PreparedGraphs/"
+def check_preparedGraphs():
+    return False
 
 ## Prediction Model Related
 def check_models():
@@ -233,6 +238,6 @@ def check_models():
 
 # You must create dataframes before creating models
 def create_models():
-    if check_DataFrames() == False:
+    if check_dataFrames() == False:
         return False
     return check_models()
