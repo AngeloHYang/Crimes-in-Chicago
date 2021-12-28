@@ -7,7 +7,24 @@ import dataAccess
 
 import time
 
-# show error is specific for creating file failed
+# To note and check for I/O error
+# Don't get keystring wrong. You should fill in status variable names and it's not gonna check
+def setIOError(keystring, errorExist = True):
+    keystring += "IOError"
+    st.session_state[keystring] = errorExist
+def checkIOError(keystring):
+    keystring += "IOError"
+    if keystring in st.session_state:
+        return st.session_state[keystring]
+    else:
+        return False
+def clearIOErrorRecords():
+    st.session_state['dfStatusIOError'] = None
+    st.session_state['graphStatusIOError'] = None
+    st.session_state['modelStatusIOError'] = None
+    
+
+# `show error` is specific for creating file failed
 def writeStatus(value, show_error = False):
     statusEmpty = st.empty()
     if (value == True):
@@ -22,12 +39,13 @@ def dataInitPage():
     st.session_state['dataInitDone'] = False # To make sure the system doesn't enter home page until data Init is done
     
     dfStatus = dataAccess.check_dataFrames()
-    modelStatus = dataAccess.check_models()
     graphStatus = dataAccess.check_preparedGraphs()
+    modelStatus = dataAccess.check_models()
     
-    if dfStatus == True and modelStatus == True:
-        print("Here!")
+    if dfStatus == True and graphStatus == True and modelStatus == True:
+        clearIOErrorRecords()
         st.session_state['dataInitDone'] = True # To make sure the system doesn't enter home page until data Init is done
+        st.experimental_rerun()
     else:
         st.write("In order to run this project, you'll need to make sure these files exist:")
         
@@ -43,30 +61,42 @@ def dataInitPage():
             st.write("")
             st.write("Prediction Models")
         with status_col:
-            dfStatusST = writeStatus(dfStatus)
-            modelStatusST = writeStatus(modelStatus)
+            # If IO error exist, obviously you should show I/O error
+            dfStatusST = writeStatus(dfStatus, checkIOError('dfStatus'))
+            graphStatusST = writeStatus(graphStatus, checkIOError('graphStatus'))
+            modelStatusST = writeStatus(modelStatus, checkIOError('modelStatus'))
         
         generateButton = st.button("Generate Now!")
         
         # Button Activities
         if generateButton:
-            # If there's no data file, you'll be unable to create Commonly used DataFrames
+            # If there's no data file, you'll be unable to generate other files
             if dataAccess.check_dataFiles():
                 if dfStatus == False:
-                    ## If there's no dataframes commonly used, we'll create them
+                    ## We'll create dataframs
                     with dfStatusST:
                         with st.spinner("Creating commonly used DataFrames..."):
                             dataAccess.load_fullData()
                             creationStatus = dataAccess.create_dataFrames()
+                            # If files aren't created (creation Status == False), then IOError does exist!
+                            setIOError('dfStatus', not creationStatus)
                         dfStatusST = writeStatus(creationStatus, True)
+                if graphStatus == False:
+                    ## We'll create graphs
+                    with graphStatusST:
+                        with st.spinner("Creating prepared graphs..."):
+                            creationStatus = dataAccess.create_preparedGraphs()
+                            time.sleep(2)
+                            setIOError('graphStatus', not creationStatus)
+                        graphStatusST = writeStatus(creationStatus, True)
                 if modelStatus == False:
                     with modelStatusST:
                         with st.spinner("Creating Prediction Models"):
                             creationStatus = dataAccess.create_models()
                             dataAccess.close_fullData()
+                            setIOError('modelStatus', not creationStatus)
                         modelStatusST = writeStatus(creationStatus, True)
-                        
-                st.experimental_rerun()
             else:
-                st.error("We cannot find data file in ../Data/, so we can't create commonly used dataframes!")
+                st.error("We cannot find data file in ../Data/, so we can't create files!")
+            st.experimental_rerun()
             

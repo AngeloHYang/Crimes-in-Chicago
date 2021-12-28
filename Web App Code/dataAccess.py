@@ -232,6 +232,9 @@ PreparedGraphPath = "./PreparedGraphs/"
 def check_preparedGraphs():
     return False
 
+def create_preparedGraphs():
+    return False
+
 ## Prediction Model Related
 def check_models():
     return False
