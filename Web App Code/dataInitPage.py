@@ -44,6 +44,7 @@ def dataInitPage():
     
     if dfStatus == True and graphStatus == True and modelStatus == True:
         clearIOErrorRecords()
+        dataAccess.close_fullData() # This line can be temporarily commented to save time during development
         st.session_state['dataInitDone'] = True # To make sure the system doesn't enter home page until data Init is done
         st.experimental_rerun()
     else:
@@ -72,28 +73,31 @@ def dataInitPage():
         if generateButton:
             # If there's no data file, you'll be unable to generate other files
             if dataAccess.check_dataFiles():
-                if dfStatus == False:
+                if dataAccess.check_dataFrames() == False:
                     ## We'll create dataframs
                     with dfStatusST:
                         with st.spinner("Creating commonly used DataFrames..."):
+                            # Read full Data File. This function has been optimized for multiple calls
                             dataAccess.load_fullData()
                             creationStatus = dataAccess.create_dataFrames()
                             # If files aren't created (creation Status == False), then IOError does exist!
                             setIOError('dfStatus', not creationStatus)
                         dfStatusST = writeStatus(creationStatus, True)
-                if graphStatus == False:
+                if dataAccess.check_preparedGraphs() == False:
                     ## We'll create graphs
                     with graphStatusST:
                         with st.spinner("Creating prepared graphs..."):
+                            # Read full Data File. This function has been optimized for multiple calls
+                            dataAccess.load_fullData()
                             creationStatus = dataAccess.create_preparedGraphs()
-                            time.sleep(2)
                             setIOError('graphStatus', not creationStatus)
                         graphStatusST = writeStatus(creationStatus, True)
-                if modelStatus == False:
+                if dataAccess.check_models() == False:
                     with modelStatusST:
                         with st.spinner("Creating Prediction Models"):
+                            # Read full Data File. This function has been optimized for multiple calls
+                            dataAccess.load_fullData()
                             creationStatus = dataAccess.create_models()
-                            dataAccess.close_fullData()
                             setIOError('modelStatus', not creationStatus)
                         modelStatusST = writeStatus(creationStatus, True)
             else:

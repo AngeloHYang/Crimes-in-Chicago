@@ -17,3 +17,10 @@ There are data files required to make the app function. You'll be lead to create
 When requirements meet, you can enter this in terminal:
 
 `streamlit run app.py`
+
+## Notes
+
+- Streamlit reruns every single lines of code when st widgets' statuses change
+- You can put variables inside the dict `st.session_state`
+- When it reruns, threads are reasigned. Threads are not fixed.
+- `st.session_state` is independent in each session (browser tab)

@@ -6,6 +6,7 @@ import streamlit as st
 import os
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import gc
 import math
 import random
@@ -19,60 +20,67 @@ def load_fullData():
     print("\nLoading full file data:")
     global Crime_data, df
     
-    Crime_data = None
-    df = None
-    
-    # Reading and processing data
-    ## Getting crime_data
-    print("Loading datafiles...", end="")
-    Crime_2005_to_2007 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2005_to_2007.csv", on_bad_lines='skip')
-    Crime_2008_to_2011 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2008_to_2011.csv", on_bad_lines='skip')
-    Crime_2012_to_2017 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2012_to_2017.csv", on_bad_lines='skip')
-    print("Done!")
-    ## Combining crime_data
-    print("Combining crime_data...", end="")
-    Crime_data = pd.concat([Crime_2005_to_2007, Crime_2008_to_2011, Crime_2012_to_2017])
-    del Crime_2005_to_2007
-    del Crime_2008_to_2011
-    del Crime_2012_to_2017
-    gc.collect()
-    print("Done!")
-    ## Processing and handling
-    print("Dropping duplicated ones...", end="")
-    Crime_data.drop_duplicates(subset=['Case Number'], inplace=True)
-    print("Done!")
-    print("Deleting unnecessary rows and columns...", end="")
-    Crime_data.index = Crime_data['Case Number']    
-    Crime_data.drop(Crime_data[ 
-                    (Crime_data['Primary Type'] != "THEFT") &
-                    (Crime_data['Primary Type'] != "MOTOR VEHICLE THEFT") &
-                    (Crime_data['Primary Type'] != 'BURGLARY')
-                ].index, inplace=True, axis=0)
-    Crime_data.drop(['IUCR', 'ID', 'Description', 'Arrest', 'Domestic', 'Beat', 'FBI Code', 'Updated On'], inplace=True, axis=1)
-    print("Done!")
-    print("Handling NaN, null, None, 0, etc...", end="")
-    Crime_data[['X Coordinate', 'Y Coordinate', 'Latitude', 'Longitude']] = Crime_data[['X Coordinate', 'Y Coordinate', 'Latitude', 'Longitude']].replace(0, np.NaN)
-    Crime_data.dropna(inplace=True)
-    print("Done!")
-    print("Handling formats...", end="")
-    Crime_data.Date = pd.to_datetime(Crime_data.Date, format="%m/%d/%Y %I:%M:%S %p")
-    Crime_data.Latitude = Crime_data.Latitude.astype(float)
-    df = pd.DataFrame(Crime_data)
-    print("Done!")
-    print("Deleting 2017...", end="")
-    theBeginningOf2017 = datetime(2017, 1, 1)
-    Crime_data.drop(df[df['Date'] >= theBeginningOf2017].index, inplace=True, axis=0)
-    print("Done!")
-    df = pd.DataFrame(Crime_data)
-    gc.collect()
-    print(Crime_data.info())
-    print("Loading full file data done!\n")
+    # This to make sure that data file will be read only once
+    if 'DataFilesLoaded' not in st.session_state or st.session_state['DataFilesLoaded'] == False:
+        Crime_data = None
+        df = None
+        
+        # Reading and processing data
+        ## Getting crime_data
+        print("Loading datafiles...", end="")
+        Crime_2005_to_2007 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2005_to_2007.csv", error_bad_lines=False)
+        Crime_2008_to_2011 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2008_to_2011.csv", error_bad_lines=False)
+        Crime_2012_to_2017 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2012_to_2017.csv", error_bad_lines=False)
+        print("Done!")
+        ## Combining crime_data
+        print("Combining crime_data...", end="")
+        Crime_data = pd.concat([Crime_2005_to_2007, Crime_2008_to_2011, Crime_2012_to_2017])
+        del Crime_2005_to_2007
+        del Crime_2008_to_2011
+        del Crime_2012_to_2017
+        gc.collect()
+        print("Done!")
+        ## Processing and handling
+        print("Dropping duplicated ones...", end="")
+        Crime_data.drop_duplicates(subset=['Case Number'], inplace=True)
+        print("Done!")
+        print("Deleting unnecessary rows and columns...", end="")
+        Crime_data.index = Crime_data['Case Number']    
+        Crime_data.drop(Crime_data[ 
+                        (Crime_data['Primary Type'] != "THEFT") &
+                        (Crime_data['Primary Type'] != "MOTOR VEHICLE THEFT") &
+                        (Crime_data['Primary Type'] != 'BURGLARY')
+                    ].index, inplace=True, axis=0)
+        Crime_data.drop(['IUCR', 'ID', 'Description', 'Arrest', 'Domestic', 'Beat', 'FBI Code', 'Updated On'], inplace=True, axis=1)
+        print("Done!")
+        print("Handling NaN, null, None, 0, etc...", end="")
+        Crime_data[['X Coordinate', 'Y Coordinate', 'Latitude', 'Longitude']] = Crime_data[['X Coordinate', 'Y Coordinate', 'Latitude', 'Longitude']].replace(0, np.NaN)
+        Crime_data.dropna(inplace=True)
+        print("Done!")
+        print("Handling formats...", end="")
+        Crime_data.Date = pd.to_datetime(Crime_data.Date, format="%m/%d/%Y %I:%M:%S %p")
+        Crime_data.Latitude = Crime_data.Latitude.astype(float)
+        df = pd.DataFrame(Crime_data)
+        print("Done!")
+        print("Deleting 2017...", end="")
+        theBeginningOf2017 = datetime(2017, 1, 1)
+        Crime_data.drop(df[df['Date'] >= theBeginningOf2017].index, inplace=True, axis=0)
+        print("Done!")
+        df = pd.DataFrame(Crime_data)
+        gc.collect()
+        print(Crime_data.info())
+        print("Loading full file data done!\n")
+        
+        st.session_state['DataFilesLoaded'] = True
+    else:
+        print("Already loaded!\n")
 
 
 # Don't forget to close_data when no longer in use
 def close_fullData():
     global Crime_data, df
     print("Releasing full data memory usage...", end="")
+    del st.session_state['DataFilesLoaded']
     Crime_data = None
     df = None
     print("Done!")
@@ -100,7 +108,7 @@ def check_dataFiles():
 ## Comoonly used DataFrame Related
 DataFramePath = "./DataFrames/"
 #You'll need to add .csv when accessing in data
-DataFrame = [
+DataFrames = [
     "CrimeCountByHour", 
     "CrimeCountByYearByLocationDescription", 
     "DistrictToCoordinates_max", 
@@ -128,7 +136,7 @@ def check_dataFrames():
         return False
         
     Exist = True
-    for i in DataFrame:
+    for i in DataFrames:
         filename = i + ".csv"
         if not os.path.exists(DataFramePath + filename) or not os.path.isfile(DataFramePath + filename):
             Exist = False
@@ -223,16 +231,29 @@ def create_dataFrames():
     print("Done!")
     
     readmeFile.close()
-    del df, Crime_data # To release memory
+    
     return check_dataFrames()
 
 
 ## Prepared graphs
 PreparedGraphPath = "./PreparedGraphs/"
+Graphs = []
 def check_preparedGraphs():
     return False
 
+# Only time counsuming or full data required graphs will be prepared
 def create_preparedGraphs():
+    global df, Crime_data
+    
+    EachCountByYear = pd.crosstab(Crime_data['Year'], Crime_data['Primary Type'])
+    sumOfEachYear = EachCountByYear.sum(axis=1)
+    percentagePerYear = EachCountByYear.div(sumOfEachYear, axis=0)
+    percentagePerYear.plot(kind='bar', stacked=True, figsize=(5, 3))
+    plt.savefig("percentagePerYear", dpi=1000)
+    
+    plt.close('all')   
+    #plt.close(fig)
+    gc.collect()
     return False
 
 ## Prediction Model Related
