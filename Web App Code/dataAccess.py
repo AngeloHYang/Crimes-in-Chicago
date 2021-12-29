@@ -247,9 +247,9 @@ def close_dataFrames():
 
 ## Prepared graphs
 PreparedGraphPath = "./PreparedGraphs/"
-Graphs = []
+Graphs = ["District Map", "Ward Map", "Community Area Map"]
 def check_preparedGraphs():
-    return False
+    return util.checkFiles(PreparedGraphPath, Graphs, ".png")
 
 # Only time counsuming or full data required graphs will be prepared
 def create_preparedGraphs():
@@ -327,7 +327,7 @@ def create_preparedGraphs():
     #plt.close(fig)
     readmeFile.close()
     gc.collect()
-    return False
+    return check_preparedGraphs()
 
 ## Prediction Model Related
 def check_models():
