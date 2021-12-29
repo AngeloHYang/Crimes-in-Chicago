@@ -16,33 +16,44 @@ import util
 
 # To load full data files into system memory. 
 # To use Crime_data and df, you need to global Crime_data, df
+# Fuller are used for graph generating, it contains 2001 to 2017, but you should only care about location related info
 Crime_data, df = None, None
+Crime_data_fuller, df_fuller = None, None
 def load_fullData():
     print("\nLoading full file data:")
     global Crime_data, df
+    global Crime_data_fuller, df_fuller
     
     # This to make sure that data file will be read only once
     if 'DataFilesLoaded' not in st.session_state or st.session_state['DataFilesLoaded'] == False:
         Crime_data = None
         df = None
+        Crime_data_fuller = None
+        df_fuller = None
         startTime = time.time()
         
         # Reading and processing data
         ## Getting crime_data
         print("Loading datafiles...", end="")
+        Crime_2001_to_2004 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2001_to_2004.csv", error_bad_lines=False)
         Crime_2005_to_2007 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2005_to_2007.csv", error_bad_lines=False)
         Crime_2008_to_2011 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2008_to_2011.csv", error_bad_lines=False)
         Crime_2012_to_2017 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2012_to_2017.csv", error_bad_lines=False)
         print("Done!")
+        
         ## Combining crime_data
         print("Combining crime_data...", end="")
-        Crime_data = pd.concat([Crime_2005_to_2007, Crime_2008_to_2011, Crime_2012_to_2017])
+        Crime_data = pd.concat([Crime_2001_to_2004, Crime_2005_to_2007, Crime_2008_to_2011, Crime_2012_to_2017])
+        del Crime_2001_to_2004
         del Crime_2005_to_2007
         del Crime_2008_to_2011
         del Crime_2012_to_2017
+        Crime_data_fuller = Crime_data.copy()
         gc.collect()
         print("Done!")
-        ## Processing and handling
+        
+        ## Processing and handling for crime_data (not fuller)
+        print("\nProcessing Crime_data(not fuller): ")
         print("Dropping duplicated ones...", end="")
         Crime_data.drop_duplicates(subset=['Case Number'], inplace=True)
         print("Done!")
@@ -68,12 +79,39 @@ def load_fullData():
         theBeginningOf2017 = datetime(2017, 1, 1)
         Crime_data.drop(df[df['Date'] >= theBeginningOf2017].index, inplace=True, axis=0)
         print("Done!")
+        print("Deleting 2004 and before...", end='')
+        theBeginningOf2005 = datetime(2005, 1, 1)
+        Crime_data.drop(df[df['Date'] < theBeginningOf2005].index, inplace=True, axis=0)
         df = pd.DataFrame(Crime_data)
-        gc.collect()
+        print("Done!")
         print(Crime_data.info())
+        
+        ## Processing and handling for crime_data_fuller
+        print("\nProcessing Crime_data_fuller: ")
+        print("Dropping duplicated ones...", end="")
+        Crime_data_fuller.drop_duplicates(subset=['Case Number'], inplace=True)
+        print("Done!")
+        print("Deleting unnecessary rows and columns...", end="")
+        Crime_data_fuller.index = Crime_data_fuller['Case Number']    
+        Crime_data_fuller.drop(['ID', 'Date', 'IUCR',
+           'Primary Type', 'Description', 'Location Description', 'Arrest',
+           'Domestic', 'Beat', 'FBI Code',
+           'Year', 'Updated On'], inplace=True, axis=1)
+        print("Done!")
+        print("Handling NaN, null, None, 0, etc...", end="")
+        Crime_data_fuller[['X Coordinate', 'Y Coordinate', 'Latitude', 'Longitude']] = Crime_data_fuller[['X Coordinate', 'Y Coordinate', 'Latitude', 'Longitude']].replace(0, np.NaN)
+        Crime_data_fuller.dropna(inplace=True)
+        print("Done!")
+        print("Handling formats...", end="")
+        Crime_data_fuller.Latitude = Crime_data_fuller.Latitude.astype(float)
+        df_fuller = pd.DataFrame(Crime_data_fuller)
+        print("Done!")
+        print(Crime_data_fuller.info())
+        
+
+        gc.collect()
         endTime = time.time()
         print("Loading full file data done! Took: " +  time.strftime("%H:%M:%S", time.gmtime(endTime - startTime)) + "\n", end='')
-        
         st.session_state['DataFilesLoaded'] = True
     else:
         print("Already loaded!\n")
@@ -82,15 +120,19 @@ def load_fullData():
 # Don't forget to close_data when no longer in use
 def close_fullData():
     global Crime_data, df
+    global Crime_data_fuller, df_fuller
     print("Releasing full data memory usage...", end="")
     del st.session_state['DataFilesLoaded']
     Crime_data = None
     df = None
+    Crime_data_fuller = None
+    df_fuller = None
     print("Done!")
 
 ## Data File Related
 DataPath = "../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/"
 DataFileName = [ 
+    'Chicago_Crimes_2001_to_2004.csv',
     'Chicago_Crimes_2005_to_2007.csv', 
     'Chicago_Crimes_2008_to_2011.csv', 
     'Chicago_Crimes_2012_to_2017.csv'
@@ -253,52 +295,8 @@ def check_preparedGraphs():
 
 # Only time counsuming or full data required graphs will be prepared
 def create_preparedGraphs():
-    
     # To Paint the Map it's better to work with all datas
-    Crime_data = None
-    df = None
-    startTime = time.time()
-    
-    # Reading and processing data
-    ## Getting crime_data
-    print("Loading datafiles for painting...", end="")
-    Crime_2001_to_2004 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2001_to_2004.csv", error_bad_lines=False)
-    Crime_2005_to_2007 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2005_to_2007.csv", error_bad_lines=False)
-    Crime_2008_to_2011 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2008_to_2011.csv", error_bad_lines=False)
-    Crime_2012_to_2017 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2012_to_2017.csv", error_bad_lines=False)
-    print("Done!")
-    ## Combining crime_data
-    print("Combining crime_data...", end="")
-    Crime_data = pd.concat([Crime_2005_to_2007, Crime_2008_to_2011, Crime_2012_to_2017])
-    del Crime_2005_to_2007
-    del Crime_2008_to_2011
-    del Crime_2012_to_2017
-    gc.collect()
-    print("Done!")
-    ## Processing and handling
-    print("Dropping duplicated ones...", end="")
-    Crime_data.drop_duplicates(subset=['Case Number'], inplace=True)
-    print("Done!")
-    print("Deleting unnecessary rows and columns...", end="")
-    Crime_data.index = Crime_data['Case Number']    
-    Crime_data.drop(['ID', 'Date', 'IUCR',
-       'Primary Type', 'Description', 'Location Description', 'Arrest',
-       'Domestic', 'Beat', 'FBI Code',
-       'Year', 'Updated On'], inplace=True, axis=1)
-    print("Done!")
-    print("Handling NaN, null, None, 0, etc...", end="")
-    Crime_data[['X Coordinate', 'Y Coordinate', 'Latitude', 'Longitude']] = Crime_data[['X Coordinate', 'Y Coordinate', 'Latitude', 'Longitude']].replace(0, np.NaN)
-    Crime_data.dropna(inplace=True)
-    print("Done!")
-    print("Handling formats...", end="")
-    Crime_data.Latitude = Crime_data.Latitude.astype(float)
-    df = pd.DataFrame(Crime_data)
-    print("Done!")
-    gc.collect()
-
-    print(Crime_data.info())
-    endTime = time.time()
-    print("Loading painting file data done! Took: " +  time.strftime("%H:%M:%S", time.gmtime(endTime - startTime)) + "\n", end='')
+    global Crime_data_fuller, df_fuller
     
     # Creating Folder
     if not os.path.exists(PreparedGraphPath):
@@ -309,16 +307,16 @@ def create_preparedGraphs():
     readmeFile = open(PreparedGraphPath + "README.txt",'w')
     print("Done!")
     totalStartTime = time.time()
-    readmeFile.write("Total Start Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(startTime)) + "\n")
+    readmeFile.write("Total Start Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(totalStartTime)) + "\n")
     
     # Paint with District
-    util.createAndSaveMap("District", readmeFile, Crime_data, df, PreparedGraphPath)
+    util.createAndSaveMap("District", readmeFile, Crime_data_fuller, df_fuller, PreparedGraphPath)
     
     # Paint with Ward
-    util.createAndSaveMap("Ward", readmeFile, Crime_data, df, PreparedGraphPath)
+    util.createAndSaveMap("Ward", readmeFile, Crime_data_fuller, df_fuller, PreparedGraphPath)
     
     # Paint with Community Area
-    util.createAndSaveMap("Community Area", readmeFile, Crime_data, df, PreparedGraphPath)
+    util.createAndSaveMap("Community Area", readmeFile, Crime_data_fuller, df_fuller, PreparedGraphPath)
     
     # EndTime analysis
     endTime = time.time()
