@@ -312,38 +312,13 @@ def create_preparedGraphs():
     readmeFile.write("Total Start Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(startTime)) + "\n")
     
     # Paint with District
-    print("Painting district map...", end="")
-    startTime = time.time()
-    readmeFile.write("\nDistrict Map:\n")
-    readmeFile.write("Start Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(startTime)) + "\n")
-    ## Get necessary lists
-    Districts = list((Crime_data.drop(['Case Number'], axis=1).reset_index())['District'].drop_duplicates())
-    DistrictToCoordinates_mean_dict = (df[['District', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['District']).mean().to_dict()
-    districtDf = df[['District', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)
-    ## Calculate points
-    thePointUsedForDistrictLabelDict = dict()
-    for district in Districts:
-        theDistrict = districtDf[districtDf['District'] == district]
-        LatDistance = theDistrict['Latitude'].sub(DistrictToCoordinates_mean_dict['Latitude'][district]).abs()
-        LonDistance = theDistrict['Longitude'].sub(DistrictToCoordinates_mean_dict['Longitude'][district]).abs()
-        totalDistance = LatDistance.mul(LatDistance) + LonDistance.mul(LonDistance)
-        theID = totalDistance.sort_values(ascending=True).index[0]
-        thePointUsedForDistrictLabelDict[district] = theID
-    ## Paint it
-    plt.figure(figsize=(10, 10), dpi=250)
-    cm = plt.cm.get_cmap('Spectral')
-    plt.scatter(x=Crime_data['X Coordinate'], y=Crime_data['Y Coordinate'], c=Crime_data['District'], s=1, cmap=cm, vmin=1, vmax=31)
-    for district in Districts:
-        plt.text(
-            x=Crime_data['X Coordinate'][thePointUsedForDistrictLabelDict[district]], 
-            y=Crime_data['Y Coordinate'][thePointUsedForDistrictLabelDict[district]],
-            s= int(district)
-        )        
-    plt.savefig(PreparedGraphPath + "District Map")
-    print("Done!")
-    endTime = time.time()
-    readmeFile.write("End Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(endTime)) + "\n")
-    readmeFile.write("Took:" + time.strftime("%H:%M:%S", time.gmtime(endTime - startTime)) + "\n")
+    util.createAndSaveMap("District", readmeFile, Crime_data, df, PreparedGraphPath)
+    
+    # Paint with Ward
+    util.createAndSaveMap("Ward", readmeFile, Crime_data, df, PreparedGraphPath)
+    
+    # Paint with Community Area
+    util.createAndSaveMap("Community Area", readmeFile, Crime_data, df, PreparedGraphPath)
     
     print("")
     Crime_data = None
