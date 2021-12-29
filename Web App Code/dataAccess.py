@@ -15,21 +15,19 @@ from datetime import datetime
 import util
 
 # To load full data files into system memory. 
-# To use Crime_data and df, you need to global Crime_data, df
+# To use Crime_data, you need to global Crime_data
 # Fuller are used for graph generating, it contains 2001 to 2017, but you should only care about location related info
-Crime_data, df = None, None
-Crime_data_fuller, df_fuller = None, None
+Crime_data = None
+Crime_data_fuller = None
 def load_fullData():
     print("\nLoading full file data:")
-    global Crime_data, df
-    global Crime_data_fuller, df_fuller
+    global Crime_data
+    global Crime_data_fuller
     
     # This to make sure that data file will be read only once
     if 'DataFilesLoaded' not in st.session_state or st.session_state['DataFilesLoaded'] == False:
         Crime_data = None
-        df = None
         Crime_data_fuller = None
-        df_fuller = None
         startTime = time.time()
         
         # Reading and processing data
@@ -73,16 +71,14 @@ def load_fullData():
         print("Handling formats...", end="")
         Crime_data.Date = pd.to_datetime(Crime_data.Date, format="%m/%d/%Y %I:%M:%S %p")
         Crime_data.Latitude = Crime_data.Latitude.astype(float)
-        df = pd.DataFrame(Crime_data)
         print("Done!")
         print("Deleting 2017...", end="")
         theBeginningOf2017 = datetime(2017, 1, 1)
-        Crime_data.drop(df[df['Date'] >= theBeginningOf2017].index, inplace=True, axis=0)
+        Crime_data.drop(Crime_data[Crime_data['Date'] >= theBeginningOf2017].index, inplace=True, axis=0)
         print("Done!")
         print("Deleting 2004 and before...", end='')
         theBeginningOf2005 = datetime(2005, 1, 1)
-        Crime_data.drop(df[df['Date'] < theBeginningOf2005].index, inplace=True, axis=0)
-        df = pd.DataFrame(Crime_data)
+        Crime_data.drop(Crime_data[Crime_data['Date'] < theBeginningOf2005].index, inplace=True, axis=0)
         print("Done!")
         print(Crime_data.info())
         
@@ -104,7 +100,7 @@ def load_fullData():
         print("Done!")
         print("Handling formats...", end="")
         Crime_data_fuller.Latitude = Crime_data_fuller.Latitude.astype(float)
-        df_fuller = pd.DataFrame(Crime_data_fuller)
+        Crime_data_fuller = pd.DataFrame(Crime_data_fuller)
         print("Done!")
         print(Crime_data_fuller.info())
         
@@ -119,14 +115,12 @@ def load_fullData():
 
 # Don't forget to close_data when no longer in use
 def close_fullData():
-    global Crime_data, df
-    global Crime_data_fuller, df_fuller
+    global Crime_data
+    global Crime_data_fuller
     print("Releasing full data memory usage...", end="")
     del st.session_state['DataFilesLoaded']
     Crime_data = None
-    df = None
     Crime_data_fuller = None
-    df_fuller = None
     print("Done!")
 
 ## Data File Related
@@ -174,7 +168,7 @@ def check_dataFrames():
     return util.checkFiles(DataFramePath, DataFrames, fileNameExtension=".csv")
 
 def create_dataFrames():    
-    global Crime_data, df
+    global Crime_data, Crime_data
     startTime = time.time()
 
     print("\nCreating DataFrames:")
@@ -190,36 +184,24 @@ def create_dataFrames():
     CrimeCountByLocationDescription = pd.crosstab(Crime_data['Location Description'], Crime_data['Primary Type'])
     
     ## District
-    DistrictToCoordinates_max = (df[['District', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['District']).max()
-    DistrictToCoordinates_min = (df[['District', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['District']).min()
-    DistrictToCoordinates_mean = (df[['District', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['District']).mean()
+    DistrictToCoordinates_max = (Crime_data[['District', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['District']).max()
+    DistrictToCoordinates_min = (Crime_data[['District', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['District']).min()
+    DistrictToCoordinates_mean = (Crime_data[['District', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['District']).mean()
     CrimeCountByDistrict = pd.crosstab(Crime_data['District'], Crime_data['Primary Type']) # All Data in Total
     ## Streets
     streetNames = []
     for i in Crime_data['Block']:
             streetName = i.split(' ', 2)[2]
             streetNames.append(streetName)
-    newPd = df.copy()
-    newPd['Street'] = streetNames    
-    CrimeCountByStreet = pd.crosstab(newPd['Street'], Crime_data['Primary Type'])
-    StreetNameToCoordinates_max = (newPd[['Street', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Street']).max()
-    StreetNameToCoordinates_min = (newPd[['Street', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Street']).min()
-    StreetNameToCoordinates_mean = (newPd[['Street', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Street']).mean()
+    newPd = Crime_data.copy()
+    newPd['Street'] = streetNames
+    CrimeCountByStreet, StreetNameToCoordinates_max, StreetNameToCoordinates_min, StreetNameToCoordinates_mean =  util.create_dataframe_countByPlace_and_coordinate_max_min_mean('Street', newPd)
     ## Block
-    CrimeCountByBlock = pd.crosstab(Crime_data['Block'], Crime_data['Primary Type'])
-    BlockNameToCoordinates_max = (df[['Block', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Block']).max()
-    BlockNameToCoordinates_min = (df[['Block', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Block']).min()
-    BlockNameToCoordinates_mean = (df[['Block', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Block']).mean()
+    CrimeCountByBlock, BlockNameToCoordinates_max, BlockNameToCoordinates_min, BlockNameToCoordinates_mean = util.create_dataframe_countByPlace_and_coordinate_max_min_mean('Block', Crime_data)
     ## Ward
-    CrimeCountByWard = pd.crosstab(Crime_data['Ward'], Crime_data['Primary Type'])
-    WardToCoordinates_max = (df[['Ward', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Ward']).max()
-    WardToCoordinates_min = (df[['Ward', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Ward']).min()
-    WardToCoordinates_mean = (df[['Ward', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Ward']).mean()
+    CrimeCountByWard, WardToCoordinates_max, WardToCoordinates_min, WardToCoordinates_mean = util.create_dataframe_countByPlace_and_coordinate_max_min_mean('Ward', Crime_data)
     ## Community Area
-    CrimeCountByCommunityArea = pd.crosstab(Crime_data['Community Area'], Crime_data['Primary Type'])
-    CommunityAreaToCoordinates_max = (df[['Community Area', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Community Area']).max()
-    CommunityAreaToCoordinates_min = (df[['Community Area', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Community Area']).min()
-    CommunityAreaToCoordinates_mean = (df[['Community Area', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['Community Area']).mean()
+    CrimeCountByCommunityArea, CommunityAreaToCoordinates_max, CommunityAreaToCoordinates_min, CommunityAreaToCoordinates_mean = util.create_dataframe_countByPlace_and_coordinate_max_min_mean('Community Area', Crime_data)
     print("Done!")
     
     # Saving needed dataframes
@@ -296,7 +278,7 @@ def check_preparedGraphs():
 # Only time counsuming or full data required graphs will be prepared
 def create_preparedGraphs():
     # To Paint the Map it's better to work with all datas
-    global Crime_data_fuller, df_fuller
+    global Crime_data_fuller, Crime_data_fuller
     
     # Creating Folder
     if not os.path.exists(PreparedGraphPath):
@@ -310,13 +292,13 @@ def create_preparedGraphs():
     readmeFile.write("Total Start Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(totalStartTime)) + "\n")
     
     # Paint with District
-    util.createAndSaveMap("District", readmeFile, Crime_data_fuller, df_fuller, PreparedGraphPath)
+    util.createAndSaveMap("District", readmeFile, Crime_data_fuller, Crime_data_fuller, PreparedGraphPath)
     
     # Paint with Ward
-    util.createAndSaveMap("Ward", readmeFile, Crime_data_fuller, df_fuller, PreparedGraphPath)
+    util.createAndSaveMap("Ward", readmeFile, Crime_data_fuller, Crime_data_fuller, PreparedGraphPath)
     
     # Paint with Community Area
-    util.createAndSaveMap("Community Area", readmeFile, Crime_data_fuller, df_fuller, PreparedGraphPath)
+    util.createAndSaveMap("Community Area", readmeFile, Crime_data_fuller, Crime_data_fuller, PreparedGraphPath)
     
     # EndTime analysis
     endTime = time.time()
@@ -324,8 +306,7 @@ def create_preparedGraphs():
     readmeFile.write("Took: " + time.strftime("%H:%M:%S", time.gmtime(endTime - totalStartTime)) + "\n")
     
     print("")
-    Crime_data = None
-    df = None
+    Crime_data_fuller = None
     plt.close('all')   
     #plt.close(fig)
     readmeFile.close()
@@ -338,6 +319,14 @@ def check_models():
 
 # You must create dataframes before creating models
 def create_models():
-    if check_dataFrames() == False:
-        return False
+    if check_dataFrames() == False or load_dataFrames() == False:
+        streetNames = []
+        for i in Crime_data['Block']:
+                streetName = i.split(' ', 2)[2]
+                streetNames.append(streetName)
+        newPd = Crime_data.copy()
+        newPd['Street'] = streetNames        
+        neededDf = newPd[['Date', 'Block', 'Primary Type', 'Location Description', 'Community Area', 'District', 'Ward']].reset_index().drop(['Case Number'], axis=1)
+        LocationDiscriptionName = list(Crime_data['Location Description'].drop_duplicates())
+        
     return check_models()
