@@ -12,6 +12,7 @@ import math
 import random
 import time
 from datetime import datetime
+import util
 
 # To load full data files into system memory. 
 # To use Crime_data and df, you need to global Crime_data, df
@@ -24,6 +25,7 @@ def load_fullData():
     if 'DataFilesLoaded' not in st.session_state or st.session_state['DataFilesLoaded'] == False:
         Crime_data = None
         df = None
+        startTime = time.time()
         
         # Reading and processing data
         ## Getting crime_data
@@ -69,7 +71,8 @@ def load_fullData():
         df = pd.DataFrame(Crime_data)
         gc.collect()
         print(Crime_data.info())
-        print("Loading full file data done!\n")
+        endTime = time.time()
+        print("Loading full file data done! Took:", time.strftime("%H:%M:%S", time.gmtime(endTime - startTime)) , "\n")
         
         st.session_state['DataFilesLoaded'] = True
     else:
@@ -94,14 +97,7 @@ DataFileName = [
 ]
 
 def check_dataFiles():
-    FileExist = True
-    if os.path.exists(DataPath):
-        for i in DataFileName:
-            fullDataFileName = DataPath + i
-            if os.path.exists(fullDataFileName) == False:
-                FileExist = False
-                break
-    return FileExist
+    return util.checkFiles(DataPath, DataFileName)
 
 
 
@@ -111,9 +107,10 @@ DataFramePath = "./DataFrames/"
 DataFrames = [
     "CrimeCountByHour", 
     "CrimeCountByYearByLocationDescription", 
+    "CrimeCountByLocationDescription", 
     "DistrictToCoordinates_max", 
     "DistrictToCoordinates_min", 
-    "DistrictToCoordinates_mean", 
+    "DistrictToCoordinates_mean",     
     "CrimeCountByDistrict", 
     "CrimeCountByStreet", 
     "StreetNameToCoordinates_max", 
@@ -132,16 +129,7 @@ DataFrames = [
     "CommunityAreaToCoordinates_min", 
     "CommunityAreaToCoordinates_mean"]
 def check_dataFrames():
-    if not os.path.exists(DataFramePath) or not os.path.isdir(DataFramePath):
-        return False
-        
-    Exist = True
-    for i in DataFrames:
-        filename = i + ".csv"
-        if not os.path.exists(DataFramePath + filename) or not os.path.isfile(DataFramePath + filename):
-            Exist = False
-            break
-    return Exist
+    return util.checkFiles(DataFramePath, DataFrames, fileNameExtension=".csv")
 
 def create_dataFrames():    
     global Crime_data, df
@@ -156,6 +144,9 @@ def create_dataFrames():
         # You can easily get by day and by year, so it won't be necessary to save them
     ## Crime count by Location Description in each year
     CrimeCountByYearByLocationDescription = pd.crosstab(Crime_data['Date'].dt.to_period('Y'), Crime_data['Location Description'])
+    ## Crime count by primary types by Location Description
+    CrimeCountByLocationDescription = pd.crosstab(Crime_data['Location Description'], Crime_data['Primary Type'])
+    
     ## District
     DistrictToCoordinates_max = (df[['District', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['District']).max()
     DistrictToCoordinates_min = (df[['District', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['District']).min()
@@ -198,6 +189,7 @@ def create_dataFrames():
     
     CrimeCountByHour.to_csv(DataFramePath + "CrimeCountByHour.csv")
     CrimeCountByYearByLocationDescription.to_csv(DataFramePath + "CrimeCountByYearByLocationDescription.csv")
+    CrimeCountByLocationDescription.to_csv(DataFramePath + "CrimeCountByLocationDescription.csv")
     DistrictToCoordinates_max.to_csv(DataFramePath + "DistrictToCoordinates_max.csv")
     DistrictToCoordinates_min.to_csv(DataFramePath + "DistrictToCoordinates_min.csv")
     DistrictToCoordinates_mean.to_csv(DataFramePath + "DistrictToCoordinates_mean.csv")
@@ -234,6 +226,24 @@ def create_dataFrames():
     
     return check_dataFrames()
 
+# To load comonly used dataFrames into the session
+def load_dataFrames():
+    if 'dataFramesLoaded' in st.session_state and st.session_state['dataFramesLoaded'] == True:
+        return True
+    elif check_dataFrames() == False:
+        return False
+    else:
+        st.session_state['dataFrames'] = dict()
+        for i in DataFrames:
+            fileName = DataFramePath +  i + '.csv'
+            theFile = pd.read_csv(fileName)
+            st.session_state['dataFrames'].append({i: theFile})
+        st.session_state['dataFramesLoaded'] = True
+        return True
+    
+#to clear memory used by loaded dataframs
+def close_dataFrames():
+    util.batch_delele_from_sessionState('dataFrames')
 
 ## Prepared graphs
 PreparedGraphPath = "./PreparedGraphs/"
@@ -244,16 +254,15 @@ def check_preparedGraphs():
 # Only time counsuming or full data required graphs will be prepared
 def create_preparedGraphs():
     global df, Crime_data
+    load_dataFrames()
     
-    EachCountByYear = pd.crosstab(Crime_data['Year'], Crime_data['Primary Type'])
-    sumOfEachYear = EachCountByYear.sum(axis=1)
-    percentagePerYear = EachCountByYear.div(sumOfEachYear, axis=0)
-    percentagePerYear.plot(kind='bar', stacked=True, figsize=(5, 3))
-    plt.savefig("percentagePerYear", dpi=1000)
+    # Paint with 
+    
     
     plt.close('all')   
     #plt.close(fig)
     gc.collect()
+    close_dataFrames()
     return False
 
 ## Prediction Model Related

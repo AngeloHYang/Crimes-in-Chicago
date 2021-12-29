@@ -4,7 +4,7 @@
 
 import streamlit as st
 import dataAccess
-
+import util
 import time
 
 # To note and check for I/O error
@@ -19,9 +19,13 @@ def checkIOError(keystring):
     else:
         return False
 def clearIOErrorRecords():
-    st.session_state['dfStatusIOError'] = None
-    st.session_state['graphStatusIOError'] = None
-    st.session_state['modelStatusIOError'] = None
+    # if 'dfStatusIOError' in st.session_state:
+    #     del st.session_state['dfStatusIOError']
+    # if 'graphStatusIOError' in st.session_state:
+    #     del st.session_state['graphStatusIOError']
+    # if 'modelStatusIOError' in st.session_state:
+    #     del st.session_state['modelStatusIOError']
+    util.batch_delele_from_sessionState(['dfStatusIOError', 'graphStatusIOError', 'modelStatusIOError'])
     
 
 # `show error` is specific for creating file failed
