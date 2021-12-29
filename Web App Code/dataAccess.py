@@ -72,7 +72,7 @@ def load_fullData():
         gc.collect()
         print(Crime_data.info())
         endTime = time.time()
-        print("Loading full file data done! Took:", time.strftime("%H:%M:%S", time.gmtime(endTime - startTime)) , "\n")
+        print("Loading full file data done! Took: ", time.strftime("%H:%M:%S", time.gmtime(endTime - startTime)) , "\n")
         
         st.session_state['DataFilesLoaded'] = True
     else:
@@ -298,7 +298,7 @@ def create_preparedGraphs():
 
     print(Crime_data.info())
     endTime = time.time()
-    print("Loading painting file data done! Took:", time.strftime("%H:%M:%S", time.gmtime(endTime - startTime)) , "\n")
+    print("Loading painting file data done! Took: ", time.strftime("%H:%M:%S", time.gmtime(endTime - startTime)) , "\n")
     
     # Creating Folder
     if not os.path.exists(PreparedGraphPath):
@@ -319,6 +319,11 @@ def create_preparedGraphs():
     
     # Paint with Community Area
     util.createAndSaveMap("Community Area", readmeFile, Crime_data, df, PreparedGraphPath)
+    
+    # EndTime analysis
+    endTime = time.time()
+    readmeFile.write("\nTotal End Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(endTime)) + "\n")
+    readmeFile.write("Took: ", time.strftime("%H:%M:%S", time.gmtime(endTime - startTime)) , "\n")
     
     print("")
     Crime_data = None
