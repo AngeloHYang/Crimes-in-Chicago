@@ -323,7 +323,7 @@ def create_preparedGraphs():
     # EndTime analysis
     endTime = time.time()
     readmeFile.write("\nTotal End Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(endTime)) + "\n")
-    readmeFile.write("Took: " + time.strftime("%H:%M:%S" + time.gmtime(endTime - totalStartTime)) + "\n")
+    readmeFile.write("Took: " + time.strftime("%H:%M:%S", time.gmtime(endTime - totalStartTime)) + "\n")
     
     print("")
     Crime_data = None
