@@ -253,16 +253,105 @@ def check_preparedGraphs():
 
 # Only time counsuming or full data required graphs will be prepared
 def create_preparedGraphs():
-    global df, Crime_data
-    load_dataFrames()
     
-    # Paint with 
+    # To Paint the Map it's better to work with all datas
+    Crime_data = None
+    df = None
+    startTime = time.time()
     
+    # Reading and processing data
+    ## Getting crime_data
+    print("Loading datafiles for painting...", end="")
+    Crime_2001_to_2004 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2001_to_2004.csv", error_bad_lines=False)
+    Crime_2005_to_2007 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2005_to_2007.csv", error_bad_lines=False)
+    Crime_2008_to_2011 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2008_to_2011.csv", error_bad_lines=False)
+    Crime_2012_to_2017 = pd.read_csv("../Data/Crimes in Chicago_An extensive dataset of crimes in Chicago (2001-2017), by City of Chicago/Chicago_Crimes_2012_to_2017.csv", error_bad_lines=False)
+    print("Done!")
+    ## Combining crime_data
+    print("Combining crime_data...", end="")
+    Crime_data = pd.concat([Crime_2005_to_2007, Crime_2008_to_2011, Crime_2012_to_2017])
+    del Crime_2005_to_2007
+    del Crime_2008_to_2011
+    del Crime_2012_to_2017
+    gc.collect()
+    print("Done!")
+    ## Processing and handling
+    print("Dropping duplicated ones...", end="")
+    Crime_data.drop_duplicates(subset=['Case Number'], inplace=True)
+    print("Done!")
+    print("Deleting unnecessary rows and columns...", end="")
+    Crime_data.index = Crime_data['Case Number']    
+    Crime_data.drop(['ID', 'Date', 'IUCR',
+       'Primary Type', 'Description', 'Location Description', 'Arrest',
+       'Domestic', 'Beat', 'FBI Code',
+       'Year', 'Updated On'], inplace=True, axis=1)
+    print("Done!")
+    print("Handling NaN, null, None, 0, etc...", end="")
+    Crime_data[['X Coordinate', 'Y Coordinate', 'Latitude', 'Longitude']] = Crime_data[['X Coordinate', 'Y Coordinate', 'Latitude', 'Longitude']].replace(0, np.NaN)
+    Crime_data.dropna(inplace=True)
+    print("Done!")
+    print("Handling formats...", end="")
+    Crime_data.Latitude = Crime_data.Latitude.astype(float)
+    df = pd.DataFrame(Crime_data)
+    print("Done!")
+    gc.collect()
+
+    print(Crime_data.info())
+    endTime = time.time()
+    print("Loading painting file data done! Took:", time.strftime("%H:%M:%S", time.gmtime(endTime - startTime)) , "\n")
     
+    # Creating Folder
+    if not os.path.exists(PreparedGraphPath):
+        os.makedirs(PreparedGraphPath)
+    
+    # README file
+    print("Generating PreparedGraph readme file...", end="")
+    readmeFile = open(PreparedGraphPath + "README.txt",'w')
+    print("Done!")
+    totalStartTime = time.time()
+    readmeFile.write("Total Start Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(startTime)) + "\n")
+    
+    # Paint with District
+    print("Painting district map...", end="")
+    startTime = time.time()
+    readmeFile.write("\nDistrict Map:\n")
+    readmeFile.write("Start Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(startTime)) + "\n")
+    ## Get necessary lists
+    Districts = list((Crime_data.drop(['Case Number'], axis=1).reset_index())['District'].drop_duplicates())
+    DistrictToCoordinates_mean_dict = (df[['District', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby(['District']).mean().to_dict()
+    districtDf = df[['District', 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)
+    ## Calculate points
+    thePointUsedForDistrictLabelDict = dict()
+    for district in Districts:
+        theDistrict = districtDf[districtDf['District'] == district]
+        LatDistance = theDistrict['Latitude'].sub(DistrictToCoordinates_mean_dict['Latitude'][district]).abs()
+        LonDistance = theDistrict['Longitude'].sub(DistrictToCoordinates_mean_dict['Longitude'][district]).abs()
+        totalDistance = LatDistance.mul(LatDistance) + LonDistance.mul(LonDistance)
+        theID = totalDistance.sort_values(ascending=True).index[0]
+        thePointUsedForDistrictLabelDict[district] = theID
+    ## Paint it
+    plt.figure(figsize=(10, 10), dpi=250)
+    cm = plt.cm.get_cmap('Spectral')
+    plt.scatter(x=Crime_data['X Coordinate'], y=Crime_data['Y Coordinate'], c=Crime_data['District'], s=1, cmap=cm, vmin=1, vmax=31)
+    for district in Districts:
+        plt.text(
+            x=Crime_data['X Coordinate'][thePointUsedForDistrictLabelDict[district]], 
+            y=Crime_data['Y Coordinate'][thePointUsedForDistrictLabelDict[district]],
+            s= int(district)
+        )        
+    plt.savefig(PreparedGraphPath + "District Map")
+    print("Done!")
+    endTime = time.time()
+    readmeFile.write("End Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(endTime)) + "\n")
+    readmeFile.write("Took:" + time.strftime("%H:%M:%S", time.gmtime(endTime - startTime)) + "\n")
+    
+    print("")
+    Crime_data = None
+    df = None
     plt.close('all')   
     #plt.close(fig)
+    readmeFile.close()
     gc.collect()
-    close_dataFrames()
     return False
 
 ## Prediction Model Related

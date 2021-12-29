@@ -92,7 +92,6 @@ def dataInitPage():
                     with graphStatusST:
                         with st.spinner("Creating prepared graphs..."):
                             # Read full Data File. This function has been optimized for multiple calls
-                            dataAccess.load_fullData()
                             creationStatus = dataAccess.create_preparedGraphs()
                             setIOError('graphStatus', not creationStatus)
                         graphStatusST = writeStatus(creationStatus, True)
