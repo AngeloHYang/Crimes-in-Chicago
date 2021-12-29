@@ -63,3 +63,4 @@ def createAndSaveMap(MapName, readmeFile, Crime_data, df, PreparedGraphPath):
     endTime = time.time()
     readmeFile.write("End Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(endTime)) + "\n")
     readmeFile.write("Took: " + time.strftime("%H:%M:%S", time.gmtime(endTime - startTime)) + "\n")
+    print("Took:" + time.strftime("%H:%M:%S", time.gmtime(endTime - startTime)), "to generate", MapName)
