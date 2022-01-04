@@ -6,10 +6,6 @@ import streamlit as st
 import gettext
 from dataInitPage import dataInitPage
 
-# just for code testing
-def test():
-    pass
-
 # Basic Initialization of the Page
 
 def init_page():
@@ -41,8 +37,6 @@ def init_app():
     # To make sure the system doesn't enter home page until data Init is done
     if 'dataInitDone' not in st.session_state or st.session_state['dataInitDone' ] == False:
         dataInitPage()
-        
-    test()
 
     # To make sure you'll only see balloons at first
     if st.session_state['dataInitDone'] == True:

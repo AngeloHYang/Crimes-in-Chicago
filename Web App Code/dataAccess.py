@@ -13,6 +13,7 @@ import random
 import time
 from datetime import datetime
 import util
+import readmeUtil
 
 # To load full data files into system memory. 
 # To use Crime_data, you need to global Crime_data
@@ -168,8 +169,13 @@ def check_dataFrames():
     return util.checkFiles(DataFramePath, DataFrames, fileNameExtension=".csv")
 
 def create_dataFrames():    
-    global Crime_data, Crime_data
-    startTime = time.time()
+    global Crime_data
+    
+    # Readme file 
+    if not os.path.exists(DataFramePath):
+        os.makedirs(DataFramePath)
+    readmeFile = readmeUtil.ReadmeUtil(DataFramePath)
+    readmeFile.write("Creating DataFrames")
 
     print("\nCreating DataFrames:")
     
@@ -203,13 +209,11 @@ def create_dataFrames():
     ## Community Area
     CrimeCountByCommunityArea, CommunityAreaToCoordinates_max, CommunityAreaToCoordinates_min, CommunityAreaToCoordinates_mean = util.create_dataframe_countByPlace_and_coordinate_max_min_mean('Community Area', Crime_data)
     print("Done!")
+    readmeFile.write("Creating DataFrames", isStartTime=False)
     
     # Saving needed dataframes
-    dataHandlingEndTime = time.time()
-    
+    readmeFile.write("Saving DataFrames")
     print("Saving DataFrames readme file...", end="")
-    if not os.path.exists(DataFramePath):
-        os.makedirs(DataFramePath)
     
     CrimeCountByHour.to_csv(DataFramePath + "CrimeCountByHour.csv")
     CrimeCountByYearByLocationDescription.to_csv(DataFramePath + "CrimeCountByYearByLocationDescription.csv")
@@ -236,17 +240,8 @@ def create_dataFrames():
     CommunityAreaToCoordinates_mean.to_csv(DataFramePath + "CommunityAreaToCoordinates_mean.csv")
     print("Done!")
     
-    savingEndTime = time.time()
-    print("Generating DataFrames readme file...", end="")
-    readmeFile = open(DataFramePath + "README.txt",'w')
-    readmeFile.write("Creation Start Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(startTime)) + "\n")
-    readmeFile.write("Creation End Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(dataHandlingEndTime)) + "\n")
-    readmeFile.write("Saving Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(savingEndTime)) + "\n")
-    readmeFile.write("Time spent on generating: " + time.strftime("%H:%M:%S", time.gmtime(dataHandlingEndTime - startTime)) + "\n")
-    readmeFile.write("Time spent on saving: " + time.strftime("%H:%M:%S", time.gmtime(savingEndTime - dataHandlingEndTime)) + "\n")
-    print("Done!")
-    
-    readmeFile.close()
+    readmeFile.write("Saving DataFrames", isStartTime=False)
+    readmeFile = None
     
     return check_dataFrames()
 
@@ -261,7 +256,7 @@ def load_dataFrames():
         for i in DataFrames:
             fileName = DataFramePath +  i + '.csv'
             theFile = pd.read_csv(fileName)
-            st.session_state['dataFrames'].append({i: theFile})
+            st.session_state['dataFrames'][i] = theFile
         st.session_state['dataFramesLoaded'] = True
         return True
     
@@ -278,38 +273,30 @@ def check_preparedGraphs():
 # Only time counsuming or full data required graphs will be prepared
 def create_preparedGraphs():
     # To Paint the Map it's better to work with all datas
-    global Crime_data_fuller, Crime_data_fuller
+    global Crime_data_fuller
     
     # Creating Folder
     if not os.path.exists(PreparedGraphPath):
         os.makedirs(PreparedGraphPath)
     
     # README file
-    print("Generating PreparedGraph readme file...", end="")
-    readmeFile = open(PreparedGraphPath + "README.txt",'w')
-    print("Done!")
-    totalStartTime = time.time()
-    readmeFile.write("Total Start Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(totalStartTime)) + "\n")
+    print("Generating PreparedGraph readme file...")
+    readmeFile = readmeUtil.ReadmeUtil(PreparedGraphPath)
     
     # Paint with District
-    util.createAndSaveMap("District", readmeFile, Crime_data_fuller, Crime_data_fuller, PreparedGraphPath)
+    util.createAndSaveMap("District", readmeFile, Crime_data_fuller, PreparedGraphPath)
     
     # Paint with Ward
-    util.createAndSaveMap("Ward", readmeFile, Crime_data_fuller, Crime_data_fuller, PreparedGraphPath)
+    util.createAndSaveMap("Ward", readmeFile, Crime_data_fuller, PreparedGraphPath)
     
     # Paint with Community Area
-    util.createAndSaveMap("Community Area", readmeFile, Crime_data_fuller, Crime_data_fuller, PreparedGraphPath)
-    
-    # EndTime analysis
-    endTime = time.time()
-    readmeFile.write("\nTotal End Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(endTime)) + "\n")
-    readmeFile.write("Took: " + time.strftime("%H:%M:%S", time.gmtime(endTime - totalStartTime)) + "\n")
+    util.createAndSaveMap("Community Area", readmeFile, Crime_data_fuller, PreparedGraphPath)
     
     print("")
     Crime_data_fuller = None
     plt.close('all')   
     #plt.close(fig)
-    readmeFile.close()
+    readmeFile = None
     gc.collect()
     return check_preparedGraphs()
 

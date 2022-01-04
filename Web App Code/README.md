@@ -8,10 +8,11 @@ You can check out about it [here](../Deployment/README.md) from the Deployment f
 
 ## Data Files
 
-There are data files required to make the app function. You'll be lead to create them when running the app. These files are not uploaded to GitHub to save space. You can delete them, and let the app regenerate if you want.
+There are data files required to make the app function. You'll be lead to create them when running the app. These files are not uploaded to GitHub to save space. You can delete them, and let the app regenerate if you like it.
 
 - Dataframes are stored in ./DataFrames
 - Prepared Graphs are stored in ./PreparedGraphs
+- Test files are stored in ./Test
 
 ## Run the App
 

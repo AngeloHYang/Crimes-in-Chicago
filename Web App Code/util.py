@@ -6,6 +6,9 @@ import os
 import time
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
+
+import readmeUtil
 
 from fbprophet import Prophet
 from fbprophet import Prophet
@@ -49,9 +52,7 @@ def create_dataframe_countByPlace_and_coordinate_max_min_mean(PlaceName, Crime_d
 
 def createAndSaveMap(MapName, readmeFile, Crime_data, PreparedGraphPath):
     print("Painting ", MapName, " map...", end="", sep="")
-    startTime = time.time()
-    readmeFile.write("\n" + MapName + "Map:\n")
-    readmeFile.write("Start Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(startTime)) + "\n")
+    readmeFile.write(MapName + " Map")
     ## Get necessary lists
     MapElements = list((Crime_data.drop(['Case Number'], axis=1).reset_index())[MapName].drop_duplicates())
     MapElementToCoordinates_mean_dict = (Crime_data[[MapName, 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby([MapName]).mean().to_dict()
@@ -77,14 +78,14 @@ def createAndSaveMap(MapName, readmeFile, Crime_data, PreparedGraphPath):
         )        
     plt.savefig(PreparedGraphPath + MapName + " Map")
     print("Done!")
-    endTime = time.time()
-    readmeFile.write("End Time:" + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(endTime)) + "\n")
-    readmeFile.write("Took: " + time.strftime("%H:%M:%S", time.gmtime(endTime - startTime)) + "\n")
-    print("Took: " + time.strftime("%H:%M:%S", time.gmtime(endTime - startTime)), "to generate", MapName)
+    readmeFile.write(MapName + " Map", isStartTime=False)
     
-def createProphetModel(neededDf, timeType, selectingCondition = [True]*len(neededDf)):
+def createProphetModel(neededDf, timeType, selectingCondition, selectAll = True):
     #selectingCondition = (neededDf['Primary Type'] == 'BURGLARY') & (neededDf['Location Description'] == 'STREET')
-    theDf = neededDf[selectingCondition]
+    if selectAll:
+        theDf = neededDf[[True]*len(neededDf)]
+    else:
+        theDf = neededDf[selectingCondition]
     
     theDataset = theDf.groupby(theDf['Date'].dt.to_period(timeType)).count()['Block']
     theDataset = pd.DataFrame(theDataset).reset_index().rename(columns={"Date": "ds", "Block": "y"})

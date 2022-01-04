@@ -13,6 +13,20 @@ from introduction import introductionPage
 import signal
 import time
 
+import readmeUtil
+
+# just for code testing
+def test():
+    a = readmeUtil.ReadmeUtil("Test")
+    a.write("hahaha")
+    a.write("Wait Wait Wait")
+    time.sleep(5)
+    a.write('hahaha', isStartTime=False)
+    a.write("Wait Wait Wait", isStartTime=False)
+    a = None
+    pass
+#test()
+
 init_app()
 if st.session_state['dataInitDone'] == True: # To make sure the system doesn't enter until data Init is done
     PageSelect = st.sidebar.radio(label = "Navigation", options=["Introduction", "Overview", "Check by the city", "Check by street name", "Check by block name"])
