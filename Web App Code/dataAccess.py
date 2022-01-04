@@ -18,17 +18,21 @@ import readmeUtil
 # To load full data files into system memory. 
 # To use Crime_data, you need to global Crime_data
 # Fuller are used for graph generating, it contains 2001 to 2017, but you should only care about location related info
+# 2003_to_2004 are data between 2003 to 2004 for model evaluation, ONE YEAR
 Crime_data = None
 Crime_data_fuller = None
+Crime_data_2003_to_2004 = None
 def load_fullData():
     print("\nLoading full file data:")
     global Crime_data
     global Crime_data_fuller
+    global Crime_data_2003_to_2004
     
     # This to make sure that data file will be read only once
     if 'DataFilesLoaded' not in st.session_state or st.session_state['DataFilesLoaded'] == False:
         Crime_data = None
         Crime_data_fuller = None
+        Crime_data_2003_to_2004 = None
         startTime = time.time()
         
         # Reading and processing data
@@ -48,6 +52,7 @@ def load_fullData():
         del Crime_2008_to_2011
         del Crime_2012_to_2017
         Crime_data_fuller = Crime_data.copy()
+        Crime_data_2003_to_2004 = Crime_data.copy()
         gc.collect()
         print("Done!")
         
@@ -105,6 +110,37 @@ def load_fullData():
         print("Done!")
         print(Crime_data_fuller.info())
         
+        
+        ## Processing and handling for Crime_data_2003_to_2004
+        print("\nProcessing Crime_data_2003_to_2004: ")
+        print("Dropping duplicated ones...", end="")
+        Crime_data_2003_to_2004.drop_duplicates(subset=['Case Number'], inplace=True)
+        print("Done!")
+        print("Deleting unnecessary rows and columns...", end="")
+        Crime_data_2003_to_2004.index = Crime_data_2003_to_2004['Case Number']    
+        Crime_data_2003_to_2004.drop(Crime_data_2003_to_2004[ 
+                        (Crime_data_2003_to_2004['Primary Type'] != "THEFT") &
+                        (Crime_data_2003_to_2004['Primary Type'] != "MOTOR VEHICLE THEFT") &
+                        (Crime_data_2003_to_2004['Primary Type'] != 'BURGLARY')
+                    ].index, inplace=True, axis=0)
+        Crime_data_2003_to_2004.drop(['IUCR', 'ID', 'Description', 'Arrest', 'Domestic', 'Beat', 'FBI Code', 'Updated On', 'Latitude', 'Longitude', 'Location', 'X Coordinate', 'Y Coordinate'], inplace=True, axis=1)
+        print("Done!")
+        print("Handling NaN, null, None, 0, etc...", end="")
+        Crime_data_2003_to_2004.dropna(inplace=True)
+        print("Done!")
+        print("Handling formats...", end="")
+        Crime_data_2003_to_2004.Date = pd.to_datetime(Crime_data_2003_to_2004.Date, format="%m/%d/%Y %I:%M:%S %p")
+        print("Done!")
+        print("Deleting 2004 and later...", end="")
+        theBeginningOf2004 = datetime(2004, 1, 1)
+        Crime_data_2003_to_2004.drop(Crime_data_2003_to_2004[Crime_data_2003_to_2004['Date'] >= theBeginningOf2004].index, inplace=True, axis=0)
+        print("Done!")
+        print("Deleting before 2003...", end='')
+        theBeginningOf2003 = datetime(2003, 1, 1)
+        Crime_data_2003_to_2004.drop(Crime_data_2003_to_2004[Crime_data_2003_to_2004['Date'] < theBeginningOf2003].index, inplace=True, axis=0)
+        print("Done!")
+        print(Crime_data_2003_to_2004.info())
+        
 
         gc.collect()
         endTime = time.time()
@@ -118,10 +154,12 @@ def load_fullData():
 def close_fullData():
     global Crime_data
     global Crime_data_fuller
+    global Crime_data_2003_to_2004
     print("Releasing full data memory usage...", end="")
     del st.session_state['DataFilesLoaded']
     Crime_data = None
     Crime_data_fuller = None
+    Crime_data_2003_to_2004 = None
     print("Done!")
 
 ## Data File Related
@@ -301,19 +339,31 @@ def create_preparedGraphs():
     return check_preparedGraphs()
 
 ## Prediction Model Related
+ModelPath = './Models/'
 def check_models():
     return False
 
 # You must create dataframes before creating models
 def create_models():
+    global Crime_data, Crime_data_2003_to_2004
     if check_dataFrames() == False or load_dataFrames() == False:
+        # Add Crime_data street names
         streetNames = []
         for i in Crime_data['Block']:
-                streetName = i.split(' ', 2)[2]
-                streetNames.append(streetName)
+            streetName = i.split(' ', 2)[2]
+            streetNames.append(streetName)
         newPd = Crime_data.copy()
         newPd['Street'] = streetNames        
+        
+        # Add Crime_data_2003_to_2004 street names
+        streetNames = []
+        for i in Crime_data_2003_to_2004['Block']:
+            streetName = i.split(' ', 2)[2]
+            streetNames.append(streetName)
+        Crime_data_2003_to_2004['Street'] = streetNames
+        
         neededDf = newPd[['Date', 'Block', 'Primary Type', 'Location Description', 'Community Area', 'District', 'Ward']].reset_index().drop(['Case Number'], axis=1)
+        Crime_data_2003_to_2004 = Crime_data_2003_to_2004[['Date', 'Block', 'Primary Type', 'Location Description', 'Community Area', 'District', 'Ward']].reset_index().drop(['Case Number'], axis=1)
         LocationDiscriptionName = list(Crime_data['Location Description'].drop_duplicates())
         
     return check_models()

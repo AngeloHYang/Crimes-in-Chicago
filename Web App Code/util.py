@@ -7,9 +7,16 @@ import time
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-
+import math
 import readmeUtil
 
+# evaluation related
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import explained_variance_score
+from sklearn.metrics import r2_score
+
+# fbprophet related
 from fbprophet import Prophet
 from fbprophet import Prophet
 from fbprophet.diagnostics import cross_validation, performance_metrics
@@ -80,20 +87,32 @@ def createAndSaveMap(MapName, readmeFile, Crime_data, PreparedGraphPath):
     print("Done!")
     readmeFile.write(MapName + " Map", isStartTime=False)
     
-def createProphetModel(neededDf, timeType, selectingCondition, selectAll = True):
+    # timeType can be H, D, W, M, Y
+def createProphetModel(neededDf, timeType, selectingCondition, Crime_data_2003_to_2004, selectAll = True):
     #selectingCondition = (neededDf['Primary Type'] == 'BURGLARY') & (neededDf['Location Description'] == 'STREET')
+    # Apply data selecting to neededDf
     if selectAll:
         theDf = neededDf[[True]*len(neededDf)]
     else:
         theDf = neededDf[selectingCondition]
-    
     theDataset = theDf.groupby(theDf['Date'].dt.to_period(timeType)).count()['Block']
     theDataset = pd.DataFrame(theDataset).reset_index().rename(columns={"Date": "ds", "Block": "y"})
     theDataset['ds'] = pd.to_datetime(theDataset['ds'].dt.to_timestamp('s'), format="%m/%d/%Y %I:%M:%S")
     
-    LocationDiscription_crosstab = pd.crosstab(theDf['Date'].dt.to_period(timeType), theDf['Location Description']).reset_index().rename(columns={"Date": "ds"})
-    LocationDiscription_crosstab['ds'] = pd.to_datetime(LocationDiscription_crosstab['ds'].dt.to_timestamp('s'), format="%m/%d/%Y %I:%M:%S")
-    theDataset = pd.merge(theDataset, LocationDiscription_crosstab, how='outer', on='ds').replace(np.nan, 0)
+    # Apply data selecting to Crime_data_2003_to_2004
+    if selectAll:
+        theRestDf = Crime_data_2003_to_2004[[True]*len(Crime_data_2003_to_2004)]
+    else:
+        theRestDf = Crime_data_2003_to_2004[selectingCondition]
+    theDataset_2003_to_2004 = theRestDf.groupby(theRestDf['Date'].dt.to_period(timeType)).count()['Block']
+    theDataset_2003_to_2004 = pd.DataFrame(theDataset_2003_to_2004).reset_index().rename(columns={"Date": "ds", "Block": "y"})
+    theDataset_2003_to_2004['ds'] = pd.to_datetime(theDataset_2003_to_2004['ds'].dt.to_timestamp('s'), format="%m/%d/%Y %I:%M:%S")
+    
+    # Added Location info to theDataset
+    # LocationDiscriptionName = list(theDf['Location Description'].drop_duplicates())
+    # LocationDiscription_crosstab = pd.crosstab(theDf['Date'].dt.to_period(timeType), theDf['Location Description']).reset_index().rename(columns={"Date": "ds"})
+    # LocationDiscription_crosstab['ds'] = pd.to_datetime(LocationDiscription_crosstab['ds'].dt.to_timestamp('s'), format="%m/%d/%Y %I:%M:%S")
+    # theDataset = pd.merge(theDataset, LocationDiscription_crosstab, how='outer', on='ds').replace(np.nan, 0)
     
     # Config Prophet
     prophet = Prophet(
@@ -116,10 +135,85 @@ def createProphetModel(neededDf, timeType, selectingCondition, selectAll = True)
     if timeType.upper() == 'Y':
         prophet.yearly_seasonality = True   
     prophet.add_country_holidays(country_name='US')
-    for i in LocationDiscriptionName:
-        prophet.add_regressor(i)
+    # for i in LocationDiscriptionName:
+    #     prophet.add_regressor(i)
     
     # Run it
     prophet.fit(theDataset)
     
+    evaluateModel(timeType, prophet, theDataset_2003_to_2004)
     return prophet
+
+def generateModelName(timeType, crimeType, locationType):
+    # timeType can be H, D, W, M, Y
+    # crimeType can be ALL, BURGLARY, MOTOR VEHICLE THEFT, THEFT
+    # LocationType can be All, Community Area, District, Street, Block, Ward
+    FileName = ''
+    
+    # deal with timeType
+    if timeType == 'H':
+        FileName += 'ByHour'
+    elif timeType == 'D':
+        FileName += 'ByDay'
+    elif timeType == 'W':
+        FileName += 'ByWeek'
+    elif timeType == 'M':
+        FileName += 'ByMonth'
+    elif timeType == 'Y':
+        FileName += 'ByYear'
+    else:
+        return False
+    
+    # deal with crimeType
+    if crimeType == 'ALL':
+        FileName += "AllCrime"
+    elif crimeType == 'BURGLARY':
+        FileName += 'Burglary'
+    elif crimeType == 'MOTOR VEHICLE THEFT':
+        FileName += 'MotorVehicleTheft'
+    elif crimeType == 'THEFT':
+        FileName += 'Theft'
+    else:
+        return False
+    
+    # deal with LocationType
+    if locationType == 'All':
+        FileName += 'WholeCity'
+    elif locationType == 'Community Area':
+        FileName += 'ByCommunityArea'
+    elif locationType == 'District':
+        FileName += 'ByDistrict'
+    elif locationType == 'Street':
+        FileName += 'ByStreet'
+    elif locationType == 'Block':
+        FileName += 'ByBlock'
+    elif locationType == 'Ward':
+        FileName += 'ByWard'
+    else:
+        return False
+    FileName += '.json'
+    return FileName
+    
+
+def saveProphetModel(ModelPath, model, timeType, crimeType, locationType):
+    FileName = generateModelName(timeType, crimeType, locationType)
+    if not FileName or not model:
+        return False
+    with open(ModelPath + FileName, 'w') as fout:
+        json.dump(model_to_json(model), fout)  # Save model
+        return True
+    return False
+    
+def evaluateModel(timeType, model, restDataframe):
+    y_true = restDataframe
+    y_predicted = pd.DataFrame(restDataframe['ds'])
+    y_predicted = model.predict(y_predicted)
+    
+    y_true = y_true['y'].values
+    y_predicted = y_predicted['yhat'].values
+    
+    print('MAE: %.3f' % mean_absolute_error(y_true, y_predicted))
+    print('MSE: %.3f' % mean_squared_error(y_true, y_predicted))
+    print('RMSE: %.3f' % math.sqrt(mean_squared_error(y_true, y_predicted)))
+    print('Explained variance: %.3f' % explained_variance_score(y_true, y_predicted))
+    print('Coefficient of determination: %.3f' % r2_score(y_true, y_predicted))
