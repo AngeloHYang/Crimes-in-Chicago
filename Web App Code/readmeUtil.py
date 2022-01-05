@@ -122,11 +122,11 @@ class ReadmeModelUill(ReadmeUtil):
                 and 'Explained variance' in self.timeTable[i]
                 and 'Coefficient of determination' in self.timeTable[i]
             ):
-                self.filestream.write("MAE: " + self.timeTable[i]['MAE'] + '\n')
-                self.filestream.write("MSE: " + self.timeTable[i]['MSE'] + '\n')
-                self.filestream.write("RMSE: " + self.timeTable[i]['RMSE'] + '\n')
-                self.filestream.write("Explained variance: " + self.timeTable[i]['Explained variance'] + '\n')
-                self.filestream.write("Coefficient of determination: " + self.timeTable[i]['Coefficient of determination'] + '\n')
+                self.filestream.write("MAE: " + str(self.timeTable[i]['MAE']) + '\n')
+                self.filestream.write("MSE: " + str(self.timeTable[i]['MSE']) + '\n')
+                self.filestream.write("RMSE: " + str(self.timeTable[i]['RMSE']) + '\n')
+                self.filestream.write("Explained variance: " + str(self.timeTable[i]['Explained variance']) + '\n')
+                self.filestream.write("Coefficient of determination: " + str(self.timeTable[i]['Coefficient of determination']) + '\n')
                 
             # New line
             self.filestream.write("\n")            

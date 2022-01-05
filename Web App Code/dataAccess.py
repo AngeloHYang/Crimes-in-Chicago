@@ -346,24 +346,33 @@ def check_models():
 # You must create dataframes before creating models
 def create_models():
     global Crime_data, Crime_data_2003_to_2004
-    if check_dataFrames() == False or load_dataFrames() == False:
-        # Add Crime_data street names
-        streetNames = []
-        for i in Crime_data['Block']:
-            streetName = i.split(' ', 2)[2]
-            streetNames.append(streetName)
-        newPd = Crime_data.copy()
-        newPd['Street'] = streetNames        
-        
-        # Add Crime_data_2003_to_2004 street names
-        streetNames = []
-        for i in Crime_data_2003_to_2004['Block']:
-            streetName = i.split(' ', 2)[2]
-            streetNames.append(streetName)
-        Crime_data_2003_to_2004['Street'] = streetNames
-        
-        neededDf = newPd[['Date', 'Block', 'Primary Type', 'Location Description', 'Community Area', 'District', 'Ward']].reset_index().drop(['Case Number'], axis=1)
-        Crime_data_2003_to_2004 = Crime_data_2003_to_2004[['Date', 'Block', 'Primary Type', 'Location Description', 'Community Area', 'District', 'Ward']].reset_index().drop(['Case Number'], axis=1)
-        LocationDiscriptionName = list(Crime_data['Location Description'].drop_duplicates())
-        
+    # Model Creation Preparation
+    ## Create folder
+    if not os.path.exists(ModelPath):
+        os.makedirs(ModelPath)
+    ## Create readme
+    readmeFile = readmeUtil.ReadmeModelUill(ModelPath)
+    ## Add Crime_data street names
+    streetNames = []
+    for i in Crime_data['Block']:
+        streetName = i.split(' ', 2)[2]
+        streetNames.append(streetName)
+    newPd = Crime_data.copy()
+    newPd['Street'] = streetNames        
+    ## Add Crime_data_2003_to_2004 street names
+    streetNames = []
+    for i in Crime_data_2003_to_2004['Block']:
+        streetName = i.split(' ', 2)[2]
+        streetNames.append(streetName)
+    Crime_data_2003_to_2004['Street'] = streetNames
+    ## More needed data handing
+    neededDf = newPd[['Date', 'Block', 'Primary Type', 'Location Description', 'Community Area', 'District', 'Ward']].reset_index().drop(['Case Number'], axis=1)
+    Crime_data_2003_to_2004 = Crime_data_2003_to_2004[['Date', 'Block', 'Primary Type', 'Location Description', 'Community Area', 'District', 'Ward']].reset_index().drop(['Case Number'], axis=1)
+    LocationDiscriptionName = list(Crime_data['Location Description'].drop_duplicates())
+    
+    # Model Creation
+    util.handleTheModel(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType="Y", crimeType="ALL", locationType="All")
+    
+    # Release memory
+    readmeFile = None
     return check_models()

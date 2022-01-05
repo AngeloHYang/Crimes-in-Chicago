@@ -17,15 +17,8 @@ import readmeUtil
 
 # just for code testing
 def test():
-    a = readmeUtil.ReadmeUtil("Test")
-    a.write("hahaha")
-    a.write("Wait Wait Wait")
-    time.sleep(5)
-    a.write('hahaha', isStartTime=False)
-    a.write("Wait Wait Wait", isStartTime=False)
-    a = None
-    pass
-#test()
+    print(str(123.12321))
+test()
 
 init_app()
 if st.session_state['dataInitDone'] == True: # To make sure the system doesn't enter until data Init is done

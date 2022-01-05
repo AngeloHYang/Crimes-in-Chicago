@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import math
-import readmeUtil
 
 # evaluation related
 from sklearn.metrics import mean_absolute_error
@@ -141,8 +140,7 @@ def createProphetModel(neededDf, timeType, selectingCondition, Crime_data_2003_t
     # Run it
     prophet.fit(theDataset)
     
-    evaluateModel(timeType, prophet, theDataset_2003_to_2004)
-    return prophet
+    return prophet, theDataset_2003_to_2004
 
 def generateModelName(timeType, crimeType, locationType):
     # timeType can be H, D, W, M, Y
@@ -191,12 +189,54 @@ def generateModelName(timeType, crimeType, locationType):
         FileName += 'ByWard'
     else:
         return False
-    FileName += '.json'
-    return FileName
+    return FileName        
+
+def generateModelSelection(crimeType, locationType):
+# Based on crimeType and locationType
+# Get selectingCondition and selectAll value
+# double False stands for error
+    crimeSelection = "(neededDf['Primary Type'] == "
+    locationSelection = "(neededDf['Location Description'] == "
+    
+    # deal with crimeType
+    if crimeType == 'ALL':
+        crimeSelection = ""
+    elif crimeType == 'BURGLARY':
+        crimeSelection += "'BURGLARY')"
+    elif crimeType == 'MOTOR VEHICLE THEFT':
+        crimeSelection += "'MOTOR VEHICLE THEFT)'"
+    elif crimeType == 'THEFT':
+        crimeSelection += "'THEFT')"
+    else:
+        return False, False
+    
+    # deal with LocationType
+    if locationType == 'All':
+        locationSelection = ""
+    elif locationType == 'Community Area':
+        locationSelection += "'Community Area')"
+    elif locationType == 'District':
+        locationSelection += "'District')"
+    elif locationType == 'Street':
+        locationSelection += "'Street')"
+    elif locationType == 'Block':
+        locationSelection += "'Block')"
+    elif locationType == 'Ward':
+        locationSelection += "'Ward')"
+    else:
+        return False, False
+    
+    if not (crimeSelection or locationSelection):
+        return None, True
+    elif crimeSelection and locationSelection:
+        return crimeSelection + " & " + locationSelection, False
+    else:
+        return crimeSelection + locationSelection, False
     
 
-def saveProphetModel(ModelPath, model, timeType, crimeType, locationType):
-    FileName = generateModelName(timeType, crimeType, locationType)
+def saveProphetModel(ModelPath, model, modelName):
+    #FileName = generateModelName(timeType, crimeType, locationType)
+    FileName = modelName + '.json'
     if not FileName or not model:
         return False
     with open(ModelPath + FileName, 'w') as fout:
@@ -204,7 +244,7 @@ def saveProphetModel(ModelPath, model, timeType, crimeType, locationType):
         return True
     return False
     
-def evaluateModel(timeType, model, restDataframe):
+def evaluateModel(model, restDataframe, readmeFile, model_name):
     y_true = restDataframe
     y_predicted = pd.DataFrame(restDataframe['ds'])
     y_predicted = model.predict(y_predicted)
@@ -212,8 +252,43 @@ def evaluateModel(timeType, model, restDataframe):
     y_true = y_true['y'].values
     y_predicted = y_predicted['yhat'].values
     
-    print('MAE: %.3f' % mean_absolute_error(y_true, y_predicted))
-    print('MSE: %.3f' % mean_squared_error(y_true, y_predicted))
-    print('RMSE: %.3f' % math.sqrt(mean_squared_error(y_true, y_predicted)))
-    print('Explained variance: %.3f' % explained_variance_score(y_true, y_predicted))
-    print('Coefficient of determination: %.3f' % r2_score(y_true, y_predicted))
+    # print('MAE: %.3f' % mean_absolute_error(y_true, y_predicted))
+    # print('MSE: %.3f' % mean_squared_error(y_true, y_predicted))
+    # print('RMSE: %.3f' % math.sqrt(mean_squared_error(y_true, y_predicted)))
+    # print('Explained variance: %.3f' % explained_variance_score(y_true, y_predicted))
+    # print('Coefficient of determination: %.3f' % r2_score(y_true, y_predicted))
+    readmeFile.writeEvaluation(model_name, "MAE", mean_absolute_error(y_true, y_predicted))
+    readmeFile.writeEvaluation(model_name, "MSE", mean_squared_error(y_true, y_predicted))
+    readmeFile.writeEvaluation(model_name, "RMSE", math.sqrt(mean_squared_error(y_true, y_predicted)))
+    readmeFile.writeEvaluation(model_name, "Explained variance", explained_variance_score(y_true, y_predicted))
+    readmeFile.writeEvaluation(model_name, "Coefficient of determination", r2_score(y_true, y_predicted))
+
+def modelErrorDetect(Reason, timeType, crimeType, locationType):
+    print(Reason, "timeType:", timeType, "crimeType:", crimeType, "locationType:", locationType)
+
+# This is the method that does everything about model creation, the one you need to use
+def handleTheModel(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType, crimeType, locationType):
+    # get name
+    model_name = generateModelName(timeType, crimeType, locationType)
+    if not model_name:
+        modelErrorDetect("model_name error!", timeType, crimeType, locationType)
+        return False
+    readmeFile.write(model_name)
+    print("Creating...", model_name, end="")
+    
+    # get condition
+    selectingCondition, selectAll = generateModelSelection(crimeType, locationType)
+    if not (selectingCondition or selectAll):
+        modelErrorDetect("Selecting Condition error!", timeType, crimeType, locationType)
+        return False
+    
+    # Create model
+    theModel, restDataframe = createProphetModel(neededDf, timeType, selectingCondition, Crime_data_2003_to_2004, selectAll)
+    readmeFile.write(model_name, isStartTime=False)
+    evaluateModel(theModel, restDataframe, readmeFile, model_name)
+    if not saveProphetModel(ModelPath, theModel, model_name):
+        modelErrorDetect("Save Model error!", timeType, crimeType, locationType)
+        return False
+    print("Done!")
+    return True
+    

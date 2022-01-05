@@ -13,6 +13,7 @@ There are data files required to make the app function. You'll be lead to create
 - Dataframes are stored in ./DataFrames
 - Prepared Graphs are stored in ./PreparedGraphs
 - Test files are stored in ./Test
+- Models are stored in ./Models
 
 ## Run the App
 
