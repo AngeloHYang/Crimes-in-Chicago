@@ -371,7 +371,19 @@ def create_models():
     LocationDiscriptionName = list(Crime_data['Location Description'].drop_duplicates())
     
     # Model Creation
-    util.handleTheModel(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType="Y", crimeType="ALL", locationType="All")
+    ## Handy lists
+    timeTypes = ['Y', 'M', 'W', 'D', 'H']
+    crimeTypes = ['ALL', 'BURGLARY', 'MOTOR VEHICLE THEFT', 'THEFT']
+    locationTypes = ['All', 'Community Area', 'District', 'Street', 'Block', 'Ward']
+    #util.handleTheModel(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType="Y", crimeType="ALL", locationType="All")
+    for t in timeTypes:
+        for c in crimeTypes:
+            for l in locationTypes:
+                #util.handleModels(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, t, c, l)
+                pass
+    
+    #ByYearAllCrimeByDistrict31
+    util.handleTheModel(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType='Y', crimeType='ALL', locationType='District', locationValue='31')
     
     # Release memory
     readmeFile = None

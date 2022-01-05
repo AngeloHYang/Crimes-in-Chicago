@@ -93,7 +93,7 @@ def createProphetModel(neededDf, timeType, selectingCondition, Crime_data_2003_t
     if selectAll:
         theDf = neededDf[[True]*len(neededDf)]
     else:
-        theDf = neededDf[selectingCondition]
+        theDf = neededDf.query(selectingCondition)
     theDataset = theDf.groupby(theDf['Date'].dt.to_period(timeType)).count()['Block']
     theDataset = pd.DataFrame(theDataset).reset_index().rename(columns={"Date": "ds", "Block": "y"})
     theDataset['ds'] = pd.to_datetime(theDataset['ds'].dt.to_timestamp('s'), format="%m/%d/%Y %I:%M:%S")
@@ -102,7 +102,7 @@ def createProphetModel(neededDf, timeType, selectingCondition, Crime_data_2003_t
     if selectAll:
         theRestDf = Crime_data_2003_to_2004[[True]*len(Crime_data_2003_to_2004)]
     else:
-        theRestDf = Crime_data_2003_to_2004[selectingCondition]
+        theRestDf = Crime_data_2003_to_2004.query(selectingCondition)
     theDataset_2003_to_2004 = theRestDf.groupby(theRestDf['Date'].dt.to_period(timeType)).count()['Block']
     theDataset_2003_to_2004 = pd.DataFrame(theDataset_2003_to_2004).reset_index().rename(columns={"Date": "ds", "Block": "y"})
     theDataset_2003_to_2004['ds'] = pd.to_datetime(theDataset_2003_to_2004['ds'].dt.to_timestamp('s'), format="%m/%d/%Y %I:%M:%S")
@@ -142,7 +142,7 @@ def createProphetModel(neededDf, timeType, selectingCondition, Crime_data_2003_t
     
     return prophet, theDataset_2003_to_2004
 
-def generateModelName(timeType, crimeType, locationType):
+def generateModelName(timeType, crimeType, locationType, locationValue):
     # timeType can be H, D, W, M, Y
     # crimeType can be ALL, BURGLARY, MOTOR VEHICLE THEFT, THEFT
     # LocationType can be All, Community Area, District, Street, Block, Ward
@@ -174,57 +174,66 @@ def generateModelName(timeType, crimeType, locationType):
     else:
         return False
     
-    # deal with LocationType
+    # deal with Location
     if locationType == 'All':
         FileName += 'WholeCity'
     elif locationType == 'Community Area':
-        FileName += 'ByCommunityArea'
+        FileName += 'ByCommunityArea' + locationValue
     elif locationType == 'District':
-        FileName += 'ByDistrict'
+        FileName += 'ByDistrict' + locationValue
     elif locationType == 'Street':
-        FileName += 'ByStreet'
+        FileName += 'ByStreet' + locationValue
     elif locationType == 'Block':
-        FileName += 'ByBlock'
+        FileName += 'ByBlock' + locationValue
     elif locationType == 'Ward':
-        FileName += 'ByWard'
+        FileName += 'ByWard' + locationValue
     else:
         return False
+    
     return FileName        
 
-def generateModelSelection(crimeType, locationType):
+def generateModelSelection(crimeType, locationType, locationValue):
 # Based on crimeType and locationType
 # Get selectingCondition and selectAll value
 # double False stands for error
-    crimeSelection = "(neededDf['Primary Type'] == "
-    locationSelection = "(neededDf['Location Description'] == "
+    # crimeSelection = "(neededDf['Primary Type'] == "
+    crimeSelection = "`Primary Type` == "
+    # #locationSelection = "(neededDf['Location Description'] == "
+    # locationSelection = "(neededDf["
+    locationSelection = ""
     
     # deal with crimeType
     if crimeType == 'ALL':
         crimeSelection = ""
     elif crimeType == 'BURGLARY':
-        crimeSelection += "'BURGLARY')"
+        crimeSelection += "'BURGLARY'"
     elif crimeType == 'MOTOR VEHICLE THEFT':
-        crimeSelection += "'MOTOR VEHICLE THEFT)'"
+        crimeSelection += "'MOTOR VEHICLE THEFT'"
     elif crimeType == 'THEFT':
-        crimeSelection += "'THEFT')"
+        crimeSelection += "'THEFT'"
     else:
         return False, False
     
-    # deal with LocationType
+    # deal with Location
     if locationType == 'All':
         locationSelection = ""
     elif locationType == 'Community Area':
-        locationSelection += "'Community Area')"
+        locationSelection += "`Community Area` =="
     elif locationType == 'District':
-        locationSelection += "'District')"
+        locationSelection += "`District` =="
     elif locationType == 'Street':
-        locationSelection += "'Street')"
+        locationSelection += "`Street` =="
     elif locationType == 'Block':
-        locationSelection += "'Block')"
+        locationSelection += "`Block` =="
     elif locationType == 'Ward':
-        locationSelection += "'Ward')"
+        locationSelection += "`Ward` =="
     else:
         return False, False
+    
+    if locationType == 'Street' or locationType == 'Block':
+        locationSelection += "'" + locationValue + "'"
+    elif locationType == 'Community Area' or locationType == 'District' or locationType == 'Ward':
+        locationSelection += locationValue
     
     if not (crimeSelection or locationSelection):
         return None, True
@@ -266,18 +275,19 @@ def evaluateModel(model, restDataframe, readmeFile, model_name):
 def modelErrorDetect(Reason, timeType, crimeType, locationType):
     print(Reason, "timeType:", timeType, "crimeType:", crimeType, "locationType:", locationType)
 
-# This is the method that does everything about model creation, the one you need to use
-def handleTheModel(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType, crimeType, locationType):
+# This is the method that does the all the process of creating ONE model creation
+# if locationType == All, locationValue will be ignored
+def handleTheModel(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType, crimeType, locationType, locationValue = ""):
     # get name
-    model_name = generateModelName(timeType, crimeType, locationType)
+    model_name = generateModelName(timeType, crimeType, locationType, locationValue)
     if not model_name:
         modelErrorDetect("model_name error!", timeType, crimeType, locationType)
         return False
     readmeFile.write(model_name)
-    print("Creating...", model_name, end="")
+    print("Creating", model_name, "...", end="")
     
     # get condition
-    selectingCondition, selectAll = generateModelSelection(crimeType, locationType)
+    selectingCondition, selectAll = generateModelSelection(crimeType, locationType, locationValue)
     if not (selectingCondition or selectAll):
         modelErrorDetect("Selecting Condition error!", timeType, crimeType, locationType)
         return False
@@ -292,3 +302,25 @@ def handleTheModel(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, tim
     print("Done!")
     return True
     
+# If you want to create a lot of the same location type
+def handleModels(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType, crimeType, locationType):
+    locationValues = []
+    if locationType == 'All':
+        return handleTheModel(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType, crimeType, locationType)
+    elif locationType == 'Community Area':
+        locationValues = [str(int(i)) for i in list(neededDf['Community Area'].drop_duplicates())]
+    elif locationType == 'District':
+        locationValues = [str(int(i)) for i in list(neededDf['District'].drop_duplicates())]
+    elif locationType == 'Street':
+        locationValues = list(neededDf['Street'].drop_duplicates())
+    elif locationType == 'Block':
+        locationValues = list(neededDf['Block'].drop_duplicates())
+    elif locationType == 'Ward':
+        locationValues = [str(int(i)) for i in list(neededDf['Ward'].drop_duplicates())]
+    else:
+        return False
+    
+    for locationValue in locationValues:
+        handleTheModel(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType, crimeType, locationType, locationValue=locationValue)
+        
+    return True
