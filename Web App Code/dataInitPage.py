@@ -6,6 +6,7 @@ import streamlit as st
 import dataAccess
 import util
 import time
+import readmeUtil
 
 # To note and check for I/O error
 # Don't get keystring wrong. You should fill in status variable names and it's not gonna check
@@ -72,38 +73,50 @@ def dataInitPage():
             modelStatusST = writeStatus(modelStatus, checkIOError('modelStatus'))
         
         generateButton = st.button("Generate Now!")
+        loading_data_STempty = st.empty()
         
         # Button Activities
         if generateButton:
             # If there's no data file, you'll be unable to generate other files
             if dataAccess.check_dataFiles():
+                readmeFile = readmeUtil.ReadmeUtil("./")
+                ## Loading data file
+                readmeFile.write("Loading Data Files")
+                with loading_data_STempty:
+                    with st.spinner("Loading data files..."):
+                        dataAccess.load_fullData()
+                        readmeFile.write("Loading Data Files", isStartTime=False)
                 if dataAccess.check_dataFrames() == False:
                     ## We'll create dataframs
                     with dfStatusST:
                         with st.spinner("Creating commonly used DataFrames..."):
+                            readmeFile.write("Creating commonly used DataFrames")
                             # Read full Data File. This function has been optimized for multiple calls
-                            dataAccess.load_fullData()
                             creationStatus = dataAccess.create_dataFrames()
                             # If files aren't created (creation Status == False), then IOError does exist!
                             setIOError('dfStatus', not creationStatus)
+                            readmeFile.write("Creating commonly used DataFrames", isStartTime=False)
                         dfStatusST = writeStatus(creationStatus, True)
                 if dataAccess.check_preparedGraphs() == False:
                     ## We'll create graphs
                     with graphStatusST:
                         with st.spinner("Creating prepared graphs..."):
+                            readmeFile.write("Creating prepared graphs")
                             # Read full Data File. This function has been optimized for multiple calls
-                            dataAccess.load_fullData()
                             creationStatus = dataAccess.create_preparedGraphs()
                             setIOError('graphStatus', not creationStatus)
+                            readmeFile.write("Creating prepared graphs", isStartTime=False)
                         graphStatusST = writeStatus(creationStatus, True)
                 if dataAccess.check_models() == False:
                     with modelStatusST:
                         with st.spinner("Creating Prediction Models"):
+                            readmeFile.write("Creating Prediction Models")
                             # Read full Data File. This function has been optimized for multiple calls
-                            dataAccess.load_fullData()
                             creationStatus = dataAccess.create_models()
                             setIOError('modelStatus', not creationStatus)
+                            readmeFile.write("Creating Prediction Models", isStartTime=False)
                         modelStatusST = writeStatus(creationStatus, True)
+                readmeFile = None
             else:
                 st.error("We cannot find data file in ../Data/, so we can't create files!")
             st.experimental_rerun()
