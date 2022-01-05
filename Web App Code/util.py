@@ -87,6 +87,8 @@ def createAndSaveMap(MapName, readmeFile, Crime_data, PreparedGraphPath):
     readmeFile.write(MapName + " Map", isStartTime=False)
     
     # timeType can be H, D, W, M, Y
+    # There'll be no model if there's less than 2 data.
+    # First False for model, third False for no evaluation
 def createProphetModel(neededDf, timeType, selectingCondition, Crime_data_2003_to_2004, selectAll = True):
     #selectingCondition = (neededDf['Primary Type'] == 'BURGLARY') & (neededDf['Location Description'] == 'STREET')
     # Apply data selecting to neededDf
@@ -107,40 +109,49 @@ def createProphetModel(neededDf, timeType, selectingCondition, Crime_data_2003_t
     theDataset_2003_to_2004 = pd.DataFrame(theDataset_2003_to_2004).reset_index().rename(columns={"Date": "ds", "Block": "y"})
     theDataset_2003_to_2004['ds'] = pd.to_datetime(theDataset_2003_to_2004['ds'].dt.to_timestamp('s'), format="%m/%d/%Y %I:%M:%S")
     
+    # Check if there not enough data
+    ModelExist, restDataExist = True, True
+    if int(theDataset.count()['ds']) < 2: ModelExist = False
+    if int(theDataset_2003_to_2004.count()['ds']) < 1: restDataExist = False
+    
     # Added Location info to theDataset
     # LocationDiscriptionName = list(theDf['Location Description'].drop_duplicates())
     # LocationDiscription_crosstab = pd.crosstab(theDf['Date'].dt.to_period(timeType), theDf['Location Description']).reset_index().rename(columns={"Date": "ds"})
     # LocationDiscription_crosstab['ds'] = pd.to_datetime(LocationDiscription_crosstab['ds'].dt.to_timestamp('s'), format="%m/%d/%Y %I:%M:%S")
     # theDataset = pd.merge(theDataset, LocationDiscription_crosstab, how='outer', on='ds').replace(np.nan, 0)
     
-    # Config Prophet
-    prophet = Prophet(
-        growth='linear',
-        seasonality_mode = 'additive'
-    )
-    if timeType.upper() == 'H':
-        prophet.daily_seasonality = True
-        prophet.weekly_seasonality = True
-        prophet.add_seasonality(name='monthly', period=30.5, fourier_order=5)
-        prophet.yearly_seasonality = True
-    if timeType.upper() == 'D':
-        prophet.daily_seasonality = True
-        prophet.weekly_seasonality = True
-        prophet.add_seasonality(name='monthly', period=30.5, fourier_order=5)
-        prophet.yearly_seasonality = True
-    if timeType.upper() == 'M':
-        prophet.add_seasonality(name='monthly', period=30.5, fourier_order=5)
-        prophet.yearly_seasonality = True
-    if timeType.upper() == 'Y':
-        prophet.yearly_seasonality = True   
-    prophet.add_country_holidays(country_name='US')
-    # for i in LocationDiscriptionName:
-    #     prophet.add_regressor(i)
-    
-    # Run it
-    prophet.fit(theDataset)
-    
-    return prophet, theDataset_2003_to_2004
+    if ModelExist:
+        # Config Prophet
+        prophet = Prophet(
+            growth='linear',
+            seasonality_mode = 'additive'
+        )
+        if timeType.upper() == 'H':
+            prophet.daily_seasonality = True
+            prophet.weekly_seasonality = True
+            prophet.add_seasonality(name='monthly', period=30.5, fourier_order=5)
+            prophet.yearly_seasonality = True
+        if timeType.upper() == 'D':
+            prophet.daily_seasonality = True
+            prophet.weekly_seasonality = True
+            prophet.add_seasonality(name='monthly', period=30.5, fourier_order=5)
+            prophet.yearly_seasonality = True
+        if timeType.upper() == 'M':
+            prophet.add_seasonality(name='monthly', period=30.5, fourier_order=5)
+            prophet.yearly_seasonality = True
+        if timeType.upper() == 'Y':
+            prophet.yearly_seasonality = True   
+        prophet.add_country_holidays(country_name='US')
+        # for i in LocationDiscriptionName:
+        #     prophet.add_regressor(i)
+        
+        # Run it
+        prophet.fit(theDataset)
+    else:
+        prophet = False
+        
+    # First False for model, second False for no evaluation
+    return prophet, theDataset_2003_to_2004, restDataExist
 
 def generateModelName(timeType, crimeType, locationType, locationValue):
     # timeType can be H, D, W, M, Y
@@ -293,12 +304,25 @@ def handleTheModel(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, tim
         return False
     
     # Create model
-    theModel, restDataframe = createProphetModel(neededDf, timeType, selectingCondition, Crime_data_2003_to_2004, selectAll)
+    theModel, restDataframe, restDataframeMatter = createProphetModel(neededDf, timeType, selectingCondition, Crime_data_2003_to_2004, selectAll)
     readmeFile.write(model_name, isStartTime=False)
-    evaluateModel(theModel, restDataframe, readmeFile, model_name)
-    if not saveProphetModel(ModelPath, theModel, model_name):
-        modelErrorDetect("Save Model error!", timeType, crimeType, locationType)
-        return False
+    
+    # Evaluate the model
+    ## If the model does exist
+    if theModel:
+        ## If evaluation does exist
+        if restDataframeMatter:
+            evaluateModel(theModel, restDataframe, readmeFile, model_name)
+        ## If evaluation doesn't exist
+        elif not restDataframeMatter:
+            readmeFile.writeEvaluation(model_name, "Evaluation", False)
+        if not saveProphetModel(ModelPath, theModel, model_name):
+            modelErrorDetect("Save Model error!", timeType, crimeType, locationType)
+            return False
+    elif not theModel:
+        # When the model doesn't exist
+        readmeFile.writeEvaluation(model_name, "Existance", False)
+
     print("Done!")
     return True
     

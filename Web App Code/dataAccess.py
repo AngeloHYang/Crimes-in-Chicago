@@ -343,7 +343,7 @@ ModelPath = './Models/'
 def check_models():
     return False
 
-# You must create dataframes before creating models
+# If there's less than 2 data, there'll be no model
 def create_models():
     global Crime_data, Crime_data_2003_to_2004
     # Model Creation Preparation
@@ -366,9 +366,9 @@ def create_models():
         streetNames.append(streetName)
     Crime_data_2003_to_2004['Street'] = streetNames
     ## More needed data handing
-    neededDf = newPd[['Date', 'Block', 'Primary Type', 'Location Description', 'Community Area', 'District', 'Ward']].reset_index().drop(['Case Number'], axis=1)
-    Crime_data_2003_to_2004 = Crime_data_2003_to_2004[['Date', 'Block', 'Primary Type', 'Location Description', 'Community Area', 'District', 'Ward']].reset_index().drop(['Case Number'], axis=1)
-    LocationDiscriptionName = list(Crime_data['Location Description'].drop_duplicates())
+    neededDf = newPd[['Date', 'Block', 'Primary Type', 'Location Description', 'Community Area', 'District', 'Ward', 'Street']].reset_index().drop(['Case Number'], axis=1)
+    Crime_data_2003_to_2004_new = Crime_data_2003_to_2004[['Date', 'Block', 'Primary Type', 'Location Description', 'Community Area', 'District', 'Ward', 'Street']].reset_index().drop(['Case Number'], axis=1)
+    #LocationDiscriptionName = list(Crime_data['Location Description'].drop_duplicates())
     
     # Model Creation
     ## Handy lists
@@ -379,11 +379,7 @@ def create_models():
     for t in timeTypes:
         for c in crimeTypes:
             for l in locationTypes:
-                #util.handleModels(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, t, c, l)
-                pass
-    
-    #ByYearAllCrimeByDistrict31
-    util.handleTheModel(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType='Y', crimeType='ALL', locationType='District', locationValue='31')
+                util.handleModels(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, t, c, l)
     
     # Release memory
     readmeFile = None

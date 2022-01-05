@@ -127,6 +127,11 @@ class ReadmeModelUill(ReadmeUtil):
                 self.filestream.write("RMSE: " + str(self.timeTable[i]['RMSE']) + '\n')
                 self.filestream.write("Explained variance: " + str(self.timeTable[i]['Explained variance']) + '\n')
                 self.filestream.write("Coefficient of determination: " + str(self.timeTable[i]['Coefficient of determination']) + '\n')
+            # Write Model or Evaluation not exist:
+                if 'Existance' in self.timeTable[i]:
+                    self.filestream.write("Existance: " + str(self.timeTable[i]['Existance']) + '\n')
+                if 'Evaluation' in self.timeTable[i]:
+                    self.filestream.write("Evaluation: " + str(self.timeTable[i]['Evaluation']) + '\n')
                 
             # New line
             self.filestream.write("\n")            
