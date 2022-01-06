@@ -5,7 +5,7 @@
 import streamlit as st
 
 def introductionPage():
-    st.title("Thefts in Chicago Prediction System")
+    st.title("Thefts in Chicago Prediction")
 
     st.markdown("This projects demonstrates predicted crime data about thefts in Chicago.")
 

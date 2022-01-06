@@ -10,6 +10,7 @@ import streamlit as st
 import gettext
 from init import init_app
 from introduction import introductionPage
+from overview import overviewPage
 
 # just for code testing
 def test():
@@ -24,7 +25,7 @@ if st.session_state['dataInitDone'] == True: # To make sure the system doesn't e
     if PageSelect == "Introduction":
         introductionPage()
     elif PageSelect == "Overview":
-        pass
+        overviewPage()
     elif PageSelect == "Check the City":
         pass
     elif PageSelect == "Check by Community Area":

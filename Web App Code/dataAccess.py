@@ -159,6 +159,7 @@ def close_fullData():
     Crime_data = None
     Crime_data_fuller = None
     Crime_data_2003_to_2004 = None
+    gc.collect()
     print("Done!")
 
 ## Data File Related
