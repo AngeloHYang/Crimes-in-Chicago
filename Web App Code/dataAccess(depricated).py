@@ -379,7 +379,7 @@ def create_models():
     for t in timeTypes:
         for c in crimeTypes:
             for l in locationTypes:
-                util.handleModels(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, t, c, l)
+                util.handleModels(neededDf, Crime_data_2003_to_2004_new, ModelPath, readmeFile, t, c, l)
     
     # Release memory
     readmeFile = None
