@@ -273,6 +273,18 @@ def load_dataFrames():
             st.session_state['dataFrames'][i] = theFile
         st.session_state['dataFramesLoaded'] = True
         return True
+    
+@st.experimental_memo
+def return_dataFrames(dataframeName):
+    if check_dataFiles() == False:
+        return False
+    else:
+        fileName = DataFramePath +  dataframeName + '.csv'
+        try:
+            theFile = pd.read_csv(fileName, parse_dates=['Date'])
+        except Exception as e:
+            theFile = pd.read_csv(fileName)
+    return theFile
 
 #to clear memory used by loaded dataframs
 def close_dataFrames():

@@ -26,3 +26,4 @@ When requirements meet, you can enter this in terminal:
 - You can put variables inside the dict `st.session_state`
 - When it reruns, threads are reasigned. Threads are not fixed.
 - `st.session_state` is independent in each session (browser tab)
+- `st.experimental_memo` can be used to reduce memory usage across multiple sessions

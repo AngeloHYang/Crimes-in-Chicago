@@ -2,3 +2,4 @@ plotly
 sklearn
 folium
 streamlit
+streamlit-folium
