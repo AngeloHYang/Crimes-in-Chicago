@@ -48,12 +48,11 @@ def checkFiles(pathString, fileNameList, fileNameExtension=""):
     return Exist
     
     
-def create_dataframe_countByPlace_and_coordinate_max_min_mean(PlaceName, Crime_data):
-    CrimeCountByPlace = pd.crosstab(Crime_data[PlaceName], Crime_data['Primary Type'])
+def create_dataframe_coordinate_max_min_mean(PlaceName, Crime_data):
     PlaceToCoordinates_max = (Crime_data[[PlaceName, 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby([PlaceName]).max()
     PlaceToCoordinates_min = (Crime_data[[PlaceName, 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby([PlaceName]).min()
     PlaceToCoordinates_mean = (Crime_data[[PlaceName, 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby([PlaceName]).mean()
-    return CrimeCountByPlace, PlaceToCoordinates_max, PlaceToCoordinates_min, PlaceToCoordinates_mean
+    return PlaceToCoordinates_max, PlaceToCoordinates_min, PlaceToCoordinates_mean
     
 
 def createAndSaveMap(MapName, readmeFile, Crime_data, PreparedGraphPath):

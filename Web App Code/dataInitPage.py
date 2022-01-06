@@ -45,9 +45,8 @@ def dataInitPage():
     
     dfStatus = dataAccess.check_dataFrames()
     graphStatus = dataAccess.check_preparedGraphs()
-    modelStatus = dataAccess.check_models()
     
-    if dfStatus == True and graphStatus == True and modelStatus == True:
+    if dfStatus == True and graphStatus == True:
         clearIOErrorRecords()
         dataAccess.close_fullData() # This line can be temporarily commented to save time during development
         st.session_state['dataInitDone'] = True # To make sure the system doesn't enter home page until data Init is done
@@ -63,14 +62,10 @@ def dataInitPage():
             st.write("")
             st.write("")
             st.write("Prepared graphs")
-            st.write("")
-            st.write("")
-            st.write("Prediction Models")
         with status_col:
             # If IO error exist, obviously you should show I/O error
             dfStatusST = writeStatus(dfStatus, checkIOError('dfStatus'))
             graphStatusST = writeStatus(graphStatus, checkIOError('graphStatus'))
-            modelStatusST = writeStatus(modelStatus, checkIOError('modelStatus'))
         
         generateButton = st.button("Generate Now!")
         loading_data_STempty = st.empty()
@@ -107,15 +102,6 @@ def dataInitPage():
                             setIOError('graphStatus', not creationStatus)
                             readmeFile.write("Creating prepared graphs", isStartTime=False)
                         graphStatusST = writeStatus(creationStatus, True)
-                if dataAccess.check_models() == False:
-                    with modelStatusST:
-                        with st.spinner("Creating Prediction Models"):
-                            readmeFile.write("Creating Prediction Models")
-                            # Read full Data File. This function has been optimized for multiple calls
-                            creationStatus = dataAccess.create_models()
-                            setIOError('modelStatus', not creationStatus)
-                            readmeFile.write("Creating Prediction Models", isStartTime=False)
-                        modelStatusST = writeStatus(creationStatus, True)
                 readmeFile = None
             else:
                 st.error("We cannot find data file in ../Data/, so we can't create files!")
