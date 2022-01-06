@@ -28,7 +28,7 @@ Install fbprophet with:
 
 Install gettext with:
 
-`conda install gettext
+`conda install gettext`
 
 You can install required packages via:
 
