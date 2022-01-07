@@ -20,6 +20,8 @@ When requirements meet, you can enter this in terminal:
 
 `streamlit run app.py`
 
+Config file are stored in ./.streamlit/. The port number was set to 18501. You may change it by your wish.
+
 ## Notes
 
 - Streamlit reruns every single lines of code when st widgets' statuses change
