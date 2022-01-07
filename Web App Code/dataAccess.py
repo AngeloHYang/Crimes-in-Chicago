@@ -276,7 +276,7 @@ def load_dataFrames():
     
 @st.experimental_memo
 def return_dataFrames(dataframeName):
-    if check_dataFiles() == False:
+    if check_dataFrames() == False:
         return False
     else:
         fileName = DataFramePath +  dataframeName + '.csv'
