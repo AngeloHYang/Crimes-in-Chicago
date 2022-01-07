@@ -12,7 +12,8 @@ from streamlit_folium import folium_static
 import pydeck as pdk
 from dataAccess import return_dataFrames
 import matplotlib.pyplot as plt
-
+from matplotlib import cm
+import themeUtil
 
 def overviewPage():
     # Sidebar options
@@ -25,42 +26,27 @@ def overviewPage():
     # Header
     st.header("Chicago Overview")
     st.caption("What it's like between 2005 and 2016")
-
-    columns = st.columns([3, 2, 3, 2])
-    with columns[0]:
-        # Trends
-        crosstab = pd.crosstab(return_dataFrames('Crime_data')['Year'], return_dataFrames('Crime_data')['Primary Type'])
-        crosstab.index = [int(i) for i in list(crosstab.index)]
-        crosstab.columns.name = None
-        crosstab_withSum = crosstab.copy()
-        crosstab_withSum['SUM'] = crosstab.sum(axis=1)
-        plt.figure()
-        plt.plot(crosstab_withSum)
-        plt.grid()
-        plt.ylabel('Crime Count')
-        plt.legend(['BURGLARY', 'MOTOR VEHICLE THEFT', 'THEFT', 'Sum'])
-        st.pyplot(plt)
-        plt.close()
-        
-        
-    with columns[1]:
-        # Description (Crime percentage pie chart)
-        #st.write(crosstab.sum().index)
-        plt.pie(crosstab.sum(), labels=crosstab.sum().index)
-        st.pyplot(plt)
-        plt.close()
-        
-        # Description (Crime number in total)
-        totalCount = ((pd.DataFrame(crosstab_withSum.sum(axis=0))).rename(columns={0: 'Count'})).sort_values(['Count'], ascending=False)
-        st.write("Numbers of crimes in total:")
-        st.table(totalCount)
-        
-    with columns[2]:
-        # Location description
-        st.bar_chart(
-            ((pd.DataFrame(return_dataFrames('Crime_data').groupby(['Location Description']).count()['Case Number']).rename(columns={'Case Number': 'Count'})).sort_values(['Count'], ascending=False)[:20]))
     
-    with columns[3]:
+    # The column 1
+    columns = st.columns([7, 2])
+    with columns[0]:
+        # Day Pattern
+        st.write("Crimes per day:")
+        crosstab = pd.crosstab(return_dataFrames('Crime_data')['Date'].dt.floor("d"), return_dataFrames('Crime_data')['Primary Type'])
+        crosstab.columns.name = None
+        st.bar_chart(crosstab)
+        
+        # Crime count by different types
+        TopValue = 10
+        st.write("Top 10 Most Crime Count Ranks:")
+        Blocks = return_dataFrames('Crime_data').groupby(['Block']).count().sort_values(['Case Number'], ascending=False)[:TopValue].index
+        Streets = return_dataFrames('Crime_data').groupby(['Street']).count().sort_values(['Case Number'], ascending=False)[:TopValue].index
+        Districts = return_dataFrames('Crime_data').groupby(['District']).count().sort_values(['Case Number'], ascending=False)[:TopValue].index
+        CommunityAreas = return_dataFrames('Crime_data').groupby(['Community Area']).count().sort_values(['Case Number'], ascending=False)[:TopValue].index
+        
+        st.write(CommunityAreas)
+    
+    with columns[1]:
         #st.map()
         map = folium.Map(
         min_zoom=9,
@@ -107,12 +93,57 @@ def overviewPage():
                 ],
             )
         )
-        
-    # Day Pattern
-    crosstab = pd.crosstab(return_dataFrames('Crime_data')['Date'].dt.floor("d"), return_dataFrames('Crime_data')['Primary Type'])
-    crosstab.columns.name = None
-    st.line_chart(crosstab)
     
-    crosstab = None
-    crosstab_withSum = None
-    totalCount = None
+    # The column 2
+    columns = st.columns([5, 2, 3])
+    themeUtil.set_column_dashed()
+    with columns[0]:
+        # Trends
+        st.write("Crime per year:")
+        crosstab = pd.crosstab(return_dataFrames('Crime_data')['Year'], return_dataFrames('Crime_data')['Primary Type'])
+        crosstab.index = [int(i) for i in list(crosstab.index)]
+        crosstab.columns.name = None
+        crosstab_withSum = crosstab.copy()
+        crosstab_withSum['SUM'] = crosstab.sum(axis=1)
+        # plt.figure()
+        # plt.plot(crosstab_withSum)
+        # plt.grid(alpha=0.5)
+        # plt.ylabel('Crime Count')
+        # plt.legend(['BURGLARY', 'MOTOR VEHICLE THEFT', 'THEFT', 'Sum'])
+        #st.pyplot(plt)
+        #plt.close()
+        st.line_chart(crosstab_withSum)
+        # Statistics
+        indexRow = list(crosstab_withSum.index)
+        colRow = list(crosstab_withSum.columns)
+        st.dataframe(pd.DataFrame(crosstab_withSum.values.T,columns=indexRow,index=colRow))
+        
+        
+    with columns[1]:
+        st.write("Crimes in total:")
+        # Description (Crime percentage pie chart)
+        #st.write(crosstab.sum().index)
+        plt.pie(crosstab.sum(), labels=crosstab.sum().index)
+        st.pyplot(plt)
+        plt.close()
+        
+        # Description (Crime number in total)
+        totalCount = ((pd.DataFrame(crosstab_withSum.sum(axis=0))).rename(columns={0: 'Count'})).sort_values(['Count'], ascending=False)
+        st.table(totalCount)
+        
+    with columns[2]:
+        # Location description
+        st.write("Most common locations:")
+        location_description = ((pd.DataFrame(return_dataFrames('Crime_data').groupby(['Location Description']).count()['Case Number']).rename(columns={'Case Number': 'Count'})).sort_values(['Count'], ascending=False)[:10]).reset_index()
+        plt.bar(location_description['Location Description'], location_description['Count'], color=['tab:Red', 'tab:Orange', 'tab:olive', 'tab:cyan', 'tab:blue'])
+        plt.grid(alpha=0.5)
+        plt.xticks(rotation=90)
+        st.pyplot(plt)
+        plt.close()
+    
+
+        
+        crosstab = None
+        crosstab_withSum = None
+        totalCount = None
+        location_description = None

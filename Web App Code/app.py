@@ -11,14 +11,16 @@ import gettext
 from init import init_app
 from introduction import introductionPage
 from overview import overviewPage
+import themeUtil
 
 # just for code testing
 def test():
+    themeUtil.test()
     pass
 
+init_app()
 test()
 
-init_app()
 if st.session_state['dataInitDone'] == True: # To make sure the system doesn't enter until data Init is done
     PageSelect = st.sidebar.radio(label = "Navigation", options=["Introduction", "Overview", "Check the City", "Check by Community Area", "Check by District", "Check by Ward", "Check by Street", "Check by Block"])
     

@@ -14,10 +14,10 @@ Check out about it [here](./Data/README.md).
 
 ## Data Analysis
 
-The Jupyter Notebook about Data Analysis of Thefts in Chicago locates [here](./Data Analysis Code/).
+The Jupyter Notebook about Data Analysis of Thefts in Chicago locates [here](./Data%20Analysis%20Code/).
 
 ## Web App
 
 The Web App Chicago Thefts Prediction based on Streamlit.
 
-Check out about it [here](./Web App Code/README.md)
+Check out about it [here](./Web%20App%20Code/README.md)

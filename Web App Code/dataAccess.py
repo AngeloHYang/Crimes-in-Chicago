@@ -282,9 +282,22 @@ def return_dataFrames(dataframeName):
         fileName = DataFramePath +  dataframeName + '.csv'
         try:
             theFile = pd.read_csv(fileName, parse_dates=['Date'])
+            if dataframeName == 'Crime_data' or dataframeName == 'Crime_data_2003_to_2004':
+                theFile['Street'] = pd.DataFrame(generateStreets(theFile))
         except Exception as e:
             theFile = pd.read_csv(fileName)
     return theFile
+
+#st.experimental_memo
+def generateStreets(Crime_data):
+    streetNames = []
+    for i in Crime_data['Block']:
+        streetName = i.split(' ', 2)
+        streetName = streetName[2]
+        streetNames.append(streetName)
+    streetNames = list(dict.fromkeys(streetNames))
+    return streetNames
+
 
 #to clear memory used by loaded dataframs
 def close_dataFrames():
