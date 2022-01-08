@@ -7,18 +7,71 @@ import streamlit as st
 import pydeck as pdk
 from dataAccess import return_dataFrames
 
-def fuck():
+# The value should be 'Count', the elevation should be 'Elevation',
+# Location info should be '[Longitude, Latitude]'
+
+def luck():
     theDataFrame = pd.DataFrame(return_dataFrames("Crime_data"))
     theDataFrame = pd.DataFrame(theDataFrame.groupby(theDataFrame['District']).count()).reset_index()
     theDataFrame = theDataFrame[['District', 'Case Number']].rename(columns={'Case Number': 'Count'})
     extra = pd.DataFrame(return_dataFrames('DistrictToCoordinates_mean'))
     theDataFrame = pd.merge(theDataFrame, extra, on='District')
-    theDataFrame['Elevation'] = theDataFrame['Count'].div(1000)
     return theDataFrame
 
-def getColorValue(theValue, lower, upper):
-    #st.write(theValue)
-    a = [128,128,255]
+# If log is True, theValue will be logged here
+def getColorValue(theValue, lower, upper, log=False):
+    # Green: rgba(67,198,148,255)
+    # Red: rgba(252,66,79,255)
+    # Orange: rgba(255,185,73,255)
+    if (log == True):
+        theValue = np.log(theValue)
+        lower = np.log(theValue)
+        upper = np.log(theValue)
+    
+    Green = [67,198,148]
+    #Orange = [255,185,73]
+    Yellow = [255,254,122]
+    Red = [252,66,79]
+    
+    # Linear function with only green and red is horrible:
+    # (lower, v1)
+    # (upper, v2)
+    # y = ax + b
+    # v1 = a * lower + b
+    # v2 = a * upper + b
+    # a = (v2 - v1) / (upper - lower)
+    # b = v1 - a * lower
+    
+    # Linear with Green, Orange, Red
+    # (lower, Green)
+    # ((lower + upper) / 2, Orange)
+    # (upper, Red)
+    
+    
+    def getY(x, lower, upper, channel):
+        #channel == 0, 1, 2
+        mid = (lower + upper)/2
+        if x <= mid:
+            a = (Yellow[channel] - Green[channel]) / (mid - lower)
+            b = Green[channel] - a * lower
+        else:
+            a = (Red[channel] - Yellow[channel]) / (upper - mid)
+            b = Yellow[channel] - a * lower
+            
+        y = a * x + b
+        return y
+    
+    if lower == upper:
+        a = Yellow
+    elif theValue <=lower:
+        a = Green
+    elif theValue >= upper:
+        a = Red
+    else:
+        a = [getY(theValue, lower, upper, i) for i in range(0, 3)]
+        pass
+        
+    #st.write(theValue, a)
     return a
 
 def getLayer(dataFrame, lower, upper, radius=200, elevation_scale=40, get_position='[Longitude, Latitude]', extruded=True):
@@ -34,15 +87,37 @@ def getLayer(dataFrame, lower, upper, radius=200, elevation_scale=40, get_positi
         pickable=True,
         extruded=extruded,
         auto_highlight=True,
-        get_fill_color=getColorValue(dataFrame['Elevation'].to_list()[0], lower, upper)
+        get_fill_color=getColorValue(dataFrame['Count'].to_list()[0], lower, upper)
     )
     return theLayer
     
 
-def drawMap(dataFrame, location_mark):
+def drawDistrictMap(dataFrame):
     #dataFrame.rename(columns={"Longitude": "lon", "Latitude": "lat"}, inplace=True)
     #ataFrame.drop(['District'], inplace=True, axis=1)
-    st.write(fuck())
+    dataFrame = luck()
+    
+    # Get Lower upper
+    #st.write(np.log(dataFrame['Count']))
+    cut_off = dataFrame['Count'].std() * 3
+    lower, upper = max(dataFrame['Count'].min(), dataFrame['Count'].mean() - cut_off), min(dataFrame['Count'].max(), dataFrame['Count'].mean() + cut_off)
+    #st.write("Lower: ", lower, " Upper: ", upper, " Cut_off: ", cut_off)
+    
+    # Generate Elevation
+    def generateElevationDivNumber(expectatedMax):
+        # upper -> expectatedMax
+        # theValue -> x
+        # upper / expectatedMax = theValue / x
+        # x = expectatedMax * theValue / upper
+        theList = []
+        for index, row in dataFrame.iterrows():
+            if upper != 0:
+                theList.append(float((pd.DataFrame(row).T)['Count']) * expectatedMax / upper)
+            else:
+                theList.append(0)
+        return theList
+    
+    dataFrame['Elevation'] = generateElevationDivNumber(expectatedMax=100)
     
     st.pydeck_chart(
         pdk.Deck(
@@ -50,17 +125,10 @@ def drawMap(dataFrame, location_mark):
             initial_view_state=pdk.ViewState(
             latitude=41.7785,
             longitude=-87.7152,
-            zoom=14,
+            zoom=10,
             pitch=50,
         ), layers=[
-            getLayer(row, 1, 100) for index, row in fuck().iterrows()
-            # , pdk.Layer(
-            #     'ScatterplotLayer',
-            #     data=fuck(),
-            #     get_position='[Longitude, Latitude]',
-            #     get_color='[200, 30, 0, 160]',
-            #     get_radius=200,),
-            ],
+            getLayer(row, radius=1000, lower=lower, upper=upper) for index, row in dataFrame.iterrows()] 
         )
     )
     

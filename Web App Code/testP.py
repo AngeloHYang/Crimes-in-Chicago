@@ -13,6 +13,6 @@ def testPage():
     
     #theDataFrame = theDataFrame.join(extra, on='Block')
     
-    mapUtil.drawMap(114514, location_mark = ['Latitude', 'Longitude'])
+    mapUtil.drawDistrictMap(114514)
     #mapUtil.test()
     #st.write(extra.columns)
