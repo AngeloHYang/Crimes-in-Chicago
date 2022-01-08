@@ -39,22 +39,24 @@ def overviewPage():
         
     
     with columns[1]:
+        # The map
         #st.map()
-        map = folium.Map(
-        min_zoom=9,
-        zoom_start = 11,
-        location=[41.8781, -87.6298],
-        zoom_control=True,
-        control_scale=True,
-        max_lat=43,
-        max_lon=-86,
-        min_lat=39,
-        min_lon=-89,
-        max_bounds=True,
-        width='100%',
-        height='100%',)
-        
-        #mapUtil.test()
+        # map = folium.Map(
+        # min_zoom=9,
+        # zoom_start = 11,
+        # location=[41.8781, -87.6298],
+        # zoom_control=True,
+        # control_scale=True,
+        # max_lat=43,
+        # max_lon=-86,
+        # min_lat=39,
+        # min_lon=-89,
+        # max_bounds=True,
+        # width='100%',
+        # height='100%',)
+        mapUtil.drawMap(
+            mapUtil.generateDataframe(return_dataFrames('Crime_data')[:100], 'Block', 'Case Number'), 
+            locationType='Block')
     
     # The column 2
     columns = st.columns([5, 2, 3])

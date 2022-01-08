@@ -18,6 +18,34 @@ def luck():
     theDataFrame = pd.merge(theDataFrame, extra, on='District')
     return theDataFrame
 
+# locationType can be District, Street, etc
+# supportingCountOption can be used to help finish the count, it'll be changed to 'Count' later
+def generateDataframe(dataframe, locationType, supportingCountOption='Case Number'):
+    dataframe = pd.DataFrame(dataframe)
+    dataframe = pd.DataFrame(dataframe.groupby(dataframe[locationType]).count()).reset_index() 
+    dataframe = dataframe[[locationType, supportingCountOption]].rename(columns={supportingCountOption: 'Count'})
+    if locationType == 'District':
+        extra = pd.DataFrame(return_dataFrames('DistrictToCoordinates_mean'))
+        dataframe = pd.merge(dataframe, extra, on='District')
+        dataframe['District'] = dataframe.District.astype(int).astype(str)
+    elif locationType == 'Street':
+        extra = pd.DataFrame(return_dataFrames('StreetNameToCoordinates_mean'))
+        dataframe = pd.merge(dataframe, extra, on='Street')
+    elif locationType == 'Block':
+        extra = pd.DataFrame(return_dataFrames('BlockNameToCoordinates_mean'))
+        dataframe = pd.merge(dataframe, extra, on='Block')
+    elif locationType == 'Community Area':
+        extra = pd.DataFrame(return_dataFrames('CommunityAreaToCoordinates_mean'))
+        dataframe = pd.merge(dataframe, extra, on='Community Area')
+        dataframe['Community Area'] = dataframe['Community Area'].astype(int).astype(str)
+    elif locationType == 'Ward':
+        extra = pd.DataFrame(return_dataFrames('WardToCoordinates_mean'))
+        dataframe = pd.merge(dataframe, extra, on='Ward')
+        dataframe['Ward'] = dataframe.Ward.astype(int).astype(str)
+    else:
+        return False
+    return dataframe
+
 # If log is True, theValue will be logged here
 def getColorValue(theValue, lower, upper, log=False):
     # Green: rgba(67,198,148,255)
@@ -92,13 +120,9 @@ def getLayer(dataFrame, lower, upper, radius=200, elevation_scale=40, get_positi
     return theLayer
     
 
-def drawDistrictMap(dataFrame):
-    #dataFrame.rename(columns={"Longitude": "lon", "Latitude": "lat"}, inplace=True)
-    #ataFrame.drop(['District'], inplace=True, axis=1)
-    dataFrame = luck()
-    
+def drawMap(dataFrame, locationType, init_latitude=41.7785, init_longitude=-87.7152, init_zoom=10, radius=-114514):
+    # If radius == -114514, the function will decide for you
     # Get Lower upper
-    #st.write(np.log(dataFrame['Count']))
     cut_off = dataFrame['Count'].std() * 3
     lower, upper = max(dataFrame['Count'].min(), dataFrame['Count'].mean() - cut_off), min(dataFrame['Count'].max(), dataFrame['Count'].mean() + cut_off)
     #st.write("Lower: ", lower, " Upper: ", upper, " Cut_off: ", cut_off)
@@ -119,23 +143,40 @@ def drawDistrictMap(dataFrame):
     
     dataFrame['Elevation'] = generateElevationDivNumber(expectatedMax=100)
     
+
+    #popup_text
+    popup_text = locationType + ": {" + locationType + "} \nCount: {Count}"
+    
+    #radius
+    if radius==-114514:
+        if locationType == 'District':
+            radius = 1000
+        elif locationType == 'Street':
+            radius = 1000
+        elif locationType == 'Block':
+            radius = 1000
+        elif locationType == 'Community Area':
+            radius = 1000
+        elif locationType == 'Ward':
+            radius = 1000
+
     st.pydeck_chart(
         pdk.Deck(
             map_style='mapbox://styles/mapbox/light-v9',
+            tooltip={"text": popup_text},
             initial_view_state=pdk.ViewState(
-            latitude=41.7785,
-            longitude=-87.7152,
-            zoom=10,
+            latitude=init_latitude,
+            longitude=init_longitude,
+            zoom=init_zoom,
             pitch=50,
         ), layers=[
-            getLayer(row, radius=1000, lower=lower, upper=upper) for index, row in dataFrame.iterrows()] 
+            getLayer(row, radius=radius, lower=lower, upper=upper) for index, row in dataFrame.iterrows()] 
         )
     )
     
 
 def test2():
     import pydeck
-
     DATA_URL = "./Test/vancouver-blocks.json"
     LAND_COVER = [[[-123.0, 49.196], [-123.0, 49.324], [-123.306, 49.324], [-123.306, 49.196]]]
     
@@ -214,7 +255,6 @@ def test():
     )
 
 '''For reference
-
 column_layer = pdk.Layer(
     "ColumnLayer",
     data=df,
