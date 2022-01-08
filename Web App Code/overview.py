@@ -55,7 +55,7 @@ def overviewPage():
         # width='100%',
         # height='100%',)
         mapUtil.drawMap(
-            mapUtil.generateDataframe(return_dataFrames('Crime_data')[:100], 'Block', 'Case Number'), 
+            mapUtil.generateDataframe(return_dataFrames('Crime_data'), 'Block', 'Case Number'), 
             locationType='Block')
     
     # The column 2

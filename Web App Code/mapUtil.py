@@ -159,6 +159,49 @@ def drawMap(dataFrame, locationType, init_latitude=41.7785, init_longitude=-87.7
             radius = 1000
         elif locationType == 'Ward':
             radius = 1000
+        
+    # lines of the count value should belong to the same layer
+    dataFrame.sort_values(['Count'], inplace=True)
+    dataFrame = dataFrame.reset_index()
+    dataFrame.drop(['index'], axis=1, inplace=True)
+    st.write(dataFrame)
+    Layers = []
+    for index, row in dataFrame.iterrows():
+        row = pd.DataFrame(row)
+        if (index == 0):
+            theLine = pd.DataFrame(row).T
+            lastValue = theLine['Count'].to_list()[0]
+            lastRow = row
+            countMark = 0
+        elif index == dataFrame.shape[0] - 1:
+            theLine = pd.DataFrame(row).T
+            theValue = theLine['Count'].to_list()[0]
+            if (theValue == lastValue):
+                swapDataframe = pd.DataFrame(columns=row.columns, index=row.index)
+                toTheIndex = index
+                for i in range(countMark, toTheIndex + 1):
+                    swapDataframe.append(lastRow)
+                Layers.append(getLayer(swapDataframe, lower, upper))
+                #st.write(theValue)
+            else:
+                Layers.append(getLayer(row, lower, upper))
+                #st.write(theValue)
+        else:
+            theLine = pd.DataFrame(row).T
+            theValue = theLine['Count'].to_list()[0]
+            if (theValue != lastValue):
+                swapDataframe = pd.DataFrame(columns=row.columns, index=row.index)
+                toTheIndex = index - 1
+                for i in range(countMark, toTheIndex + 1):
+                    swapDataframe.append(lastRow)
+                Layers.append(getLayer(swapDataframe, lower, upper))
+                lastValue = theValue
+                lastRow = row
+                countMark = index
+                #st.write(theValue)
+                #swap = pd.a
+                #for i in
+    st.write("Size of layer: ", len(Layers))
 
     st.pydeck_chart(
         pdk.Deck(
