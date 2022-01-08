@@ -120,13 +120,20 @@ def getLayer(dataFrame, lower, upper, radius=200, elevation_scale=40, get_positi
     return theLayer
     
 
-def drawMap(dataFrame, locationType, init_latitude=41.7785, init_longitude=-87.7152, init_zoom=10, radius=-114514):
+def drawMap(dataFrame, locationType, init_latitude=41.7785, init_longitude=-87.7152, init_zoom=10, radius=-114514, expectatedMaxElevation=-114514):
     # If radius == -114514, the function will decide for you
     # Get Lower upper
     cut_off = dataFrame['Count'].std() * 3
     lower, upper = max(dataFrame['Count'].min(), dataFrame['Count'].mean() - cut_off), min(dataFrame['Count'].max(), dataFrame['Count'].mean() + cut_off)
     #st.write("Lower: ", lower, " Upper: ", upper, " Cut_off: ", cut_off)
     
+    expectatedMax = {'District': 100,
+                     'Street': 100,
+                     'Block': 20,
+                     'Ward': 100,
+                     'Community Area': 100}
+    if expectatedMaxElevation != -114514:
+        expectatedMax[locationType] = expectatedMaxElevation
     # Generate Elevation
     def generateElevationDivNumber(expectatedMax):
         # upper -> expectatedMax
@@ -141,7 +148,7 @@ def drawMap(dataFrame, locationType, init_latitude=41.7785, init_longitude=-87.7
                 theList.append(0)
         return theList
     
-    dataFrame['Elevation'] = generateElevationDivNumber(expectatedMax=100)
+    dataFrame['Elevation'] = generateElevationDivNumber(expectatedMax[locationType])
     
 
     #popup_text
@@ -154,7 +161,7 @@ def drawMap(dataFrame, locationType, init_latitude=41.7785, init_longitude=-87.7
         elif locationType == 'Street':
             radius = 1000
         elif locationType == 'Block':
-            radius = 1000
+            radius = 10
         elif locationType == 'Community Area':
             radius = 1000
         elif locationType == 'Ward':
@@ -164,7 +171,7 @@ def drawMap(dataFrame, locationType, init_latitude=41.7785, init_longitude=-87.7
     dataFrame.sort_values(['Count'], inplace=True)
     dataFrame = dataFrame.reset_index()
     dataFrame.drop(['index'], axis=1, inplace=True)
-    st.write(dataFrame)
+    #st.write(dataFrame)
     Layers = []
     for index, row in dataFrame.iterrows():
         row = pd.DataFrame(row)
@@ -201,7 +208,7 @@ def drawMap(dataFrame, locationType, init_latitude=41.7785, init_longitude=-87.7
                 #st.write(theValue)
                 #swap = pd.a
                 #for i in
-    st.write("Size of layer: ", len(Layers))
+    #st.write("Size of layer: ", len(Layers))
 
     st.pydeck_chart(
         pdk.Deck(

@@ -31,12 +31,21 @@ def overviewPage():
     # The column 1
     columns = st.columns([7, 2])
     with columns[0]:
+        # Chicago Intro
+        st.info("There are " +
+            str(return_dataFrames('Crime_data')['District'].drop_duplicates().count()) + " districts, " + 
+            str(return_dataFrames('Crime_data')['Ward'].drop_duplicates().count()) + " wards, " + 
+            str(return_dataFrames('Crime_data')['Community Area'].drop_duplicates().count()) + " community areas, " + 
+            str(return_dataFrames('Crime_data')['Street'].drop_duplicates().count()) + ' streets, ' + 
+            str(return_dataFrames('Crime_data')['Block'].drop_duplicates().count()) + ' blocks' + 
+            " in the city of Chicago, according to our data.")
+        # Map Warning
+        st.warning("Colors in the map are only RELATIVE!")
         # Day Pattern
         st.write("Crimes per day:")
         crosstab = pd.crosstab(return_dataFrames('Crime_data')['Date'].dt.floor("d"), return_dataFrames('Crime_data')['Primary Type'])
         crosstab.columns.name = None
         st.bar_chart(crosstab)
-        
     
     with columns[1]:
         # The map
@@ -55,7 +64,7 @@ def overviewPage():
         # width='100%',
         # height='100%',)
         mapUtil.drawMap(
-            mapUtil.generateDataframe(return_dataFrames('Crime_data'), 'Block', 'Case Number'), 
+            mapUtil.generateDataframe(return_dataFrames('Crime_data')[:10], 'Block', 'Case Number'), 
             locationType='Block')
     
     # The column 2
