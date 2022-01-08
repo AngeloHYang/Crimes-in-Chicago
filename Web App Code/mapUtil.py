@@ -25,21 +25,21 @@ def generateDataframe(dataframe, locationType, supportingCountOption='Case Numbe
     dataframe = pd.DataFrame(dataframe.groupby(dataframe[locationType]).count()).reset_index() 
     dataframe = dataframe[[locationType, supportingCountOption]].rename(columns={supportingCountOption: 'Count'})
     if locationType == 'District':
-        extra = pd.DataFrame(return_dataFrames('DistrictToCoordinates_mean'))
+        extra = pd.DataFrame(return_dataFrames('DistrictToCoordinates_closest'))
         dataframe = pd.merge(dataframe, extra, on='District')
         dataframe['District'] = dataframe.District.astype(int).astype(str)
     elif locationType == 'Street':
-        extra = pd.DataFrame(return_dataFrames('StreetNameToCoordinates_mean'))
+        extra = pd.DataFrame(return_dataFrames('StreetNameToCoordinates_closest'))
         dataframe = pd.merge(dataframe, extra, on='Street')
     elif locationType == 'Block':
-        extra = pd.DataFrame(return_dataFrames('BlockNameToCoordinates_mean'))
+        extra = pd.DataFrame(return_dataFrames('BlockNameToCoordinates_closest'))
         dataframe = pd.merge(dataframe, extra, on='Block')
     elif locationType == 'Community Area':
-        extra = pd.DataFrame(return_dataFrames('CommunityAreaToCoordinates_mean'))
+        extra = pd.DataFrame(return_dataFrames('CommunityAreaToCoordinates_closest'))
         dataframe = pd.merge(dataframe, extra, on='Community Area')
         dataframe['Community Area'] = dataframe['Community Area'].astype(int).astype(str)
     elif locationType == 'Ward':
-        extra = pd.DataFrame(return_dataFrames('WardToCoordinates_mean'))
+        extra = pd.DataFrame(return_dataFrames('WardToCoordinates_closest'))
         dataframe = pd.merge(dataframe, extra, on='Ward')
         dataframe['Ward'] = dataframe.Ward.astype(int).astype(str)
     else:

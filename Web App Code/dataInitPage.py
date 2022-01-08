@@ -103,6 +103,7 @@ def dataInitPage():
                         readmeFile.write("Creating prepared graphs", isStartTime=False)
                     graphStatusST = writeStatus(creationStatus, True)
             readmeFile = None
+            dataAccess.close_fullData()
         else:
             st.error("We cannot find data file in ../Data/, so we can't create files!")
         st.experimental_rerun()

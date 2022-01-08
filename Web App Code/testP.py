@@ -10,7 +10,6 @@ import streamlit as st
 
 def testPage():
     st.title("Test Page")
-    
     #theDataFrame = theDataFrame.join(extra, on='Block')
     
     #mapUtil.drawDistrictMap(114514)

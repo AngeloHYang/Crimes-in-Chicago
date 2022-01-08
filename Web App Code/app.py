@@ -12,11 +12,9 @@ from init import init_app
 from introduction import introductionPage
 from overview import overviewPage
 from testP import testPage
-import themeUtil
 
 # just for code testing
 def test():
-    themeUtil.test()
     pass
 
 init_app()

@@ -182,19 +182,24 @@ DataFrames = [
     "Crime_data_2003_to_2004",
     "DistrictToCoordinates_max", 
     "DistrictToCoordinates_min", 
-    "DistrictToCoordinates_mean",     
+    "DistrictToCoordinates_mean",
+    "DistrictToCoordinates_closest",
     "StreetNameToCoordinates_max", 
     "StreetNameToCoordinates_min", 
-    "StreetNameToCoordinates_mean", 
+    "StreetNameToCoordinates_mean",
+    "StreetNameToCoordinates_closest",
     "BlockNameToCoordinates_max", 
     "BlockNameToCoordinates_min", 
-    "BlockNameToCoordinates_mean", 
+    "BlockNameToCoordinates_mean",
+    "BlockNameToCoordinates_closest",
     "WardToCoordinates_max", 
     "WardToCoordinates_min", 
-    "WardToCoordinates_mean", 
+    "WardToCoordinates_mean",
+    "WardToCoordinates_closest",
     "CommunityAreaToCoordinates_max", 
     "CommunityAreaToCoordinates_min", 
-    "CommunityAreaToCoordinates_mean"]
+    "CommunityAreaToCoordinates_mean",
+    "CommunityAreaToCoordinates_closest"]
 def check_dataFrames():
     return util.checkFiles(DataFramePath, DataFrames, fileNameExtension=".csv")
 
@@ -213,7 +218,7 @@ def create_dataFrames():
     print("Generating dataframes in memory...", end="")
     
     ## District
-    DistrictToCoordinates_max, DistrictToCoordinates_min, DistrictToCoordinates_mean = util.create_dataframe_coordinate_max_min_mean('District', Crime_data_fuller)
+    DistrictToCoordinates_max, DistrictToCoordinates_min, DistrictToCoordinates_mean, DistrictToCoordinates_closest = util.create_dataframe_coordinate_max_min_mean_closest('District', Crime_data_fuller)
     ## Streets
     streetNames = []
     for i in Crime_data_fuller['Block']:
@@ -221,13 +226,13 @@ def create_dataFrames():
             streetNames.append(streetName)
     newPd = Crime_data_fuller
     newPd['Street'] = streetNames
-    StreetNameToCoordinates_max, StreetNameToCoordinates_min, StreetNameToCoordinates_mean =  util.create_dataframe_coordinate_max_min_mean('Street', newPd)
+    StreetNameToCoordinates_max, StreetNameToCoordinates_min, StreetNameToCoordinates_mean, StreetNameToCoordinates_closest =  util.create_dataframe_coordinate_max_min_mean_closest('Street', newPd)
     ## Block
-    BlockNameToCoordinates_max, BlockNameToCoordinates_min, BlockNameToCoordinates_mean = util.create_dataframe_coordinate_max_min_mean('Block', newPd)
+    BlockNameToCoordinates_max, BlockNameToCoordinates_min, BlockNameToCoordinates_mean, BlockNameToCoordinates_closest = util.create_dataframe_coordinate_max_min_mean_closest('Block', newPd)
     ## Ward
-    WardToCoordinates_max, WardToCoordinates_min, WardToCoordinates_mean = util.create_dataframe_coordinate_max_min_mean('Ward', newPd)
+    WardToCoordinates_max, WardToCoordinates_min, WardToCoordinates_mean, WardToCoordinates_closest = util.create_dataframe_coordinate_max_min_mean_closest('Ward', newPd)
     ## Community Area
-    CommunityAreaToCoordinates_max, CommunityAreaToCoordinates_min, CommunityAreaToCoordinates_mean = util.create_dataframe_coordinate_max_min_mean('Community Area', newPd)
+    CommunityAreaToCoordinates_max, CommunityAreaToCoordinates_min, CommunityAreaToCoordinates_mean, CommunityAreaToCoordinates_closest= util.create_dataframe_coordinate_max_min_mean_closest('Community Area', newPd)
     print("Done!")
     readmeFile.write("Creating DataFrames", isStartTime=False)
     
@@ -240,18 +245,23 @@ def create_dataFrames():
     DistrictToCoordinates_max.to_csv(DataFramePath + "DistrictToCoordinates_max.csv")
     DistrictToCoordinates_min.to_csv(DataFramePath + "DistrictToCoordinates_min.csv")
     DistrictToCoordinates_mean.to_csv(DataFramePath + "DistrictToCoordinates_mean.csv")
+    DistrictToCoordinates_closest.to_csv(DataFramePath + "DistrictToCoordinates_closest.csv")
     StreetNameToCoordinates_max.to_csv(DataFramePath + "StreetNameToCoordinates_max.csv")
     StreetNameToCoordinates_min.to_csv(DataFramePath + "StreetNameToCoordinates_min.csv")
     StreetNameToCoordinates_mean.to_csv(DataFramePath + "StreetNameToCoordinates_mean.csv")
+    StreetNameToCoordinates_closest.to_csv(DataFramePath + "StreetNameToCoordinates_closest.csv")
     BlockNameToCoordinates_max.to_csv(DataFramePath + "BlockNameToCoordinates_max.csv")
     BlockNameToCoordinates_min.to_csv(DataFramePath + "BlockNameToCoordinates_min.csv")
     BlockNameToCoordinates_mean.to_csv(DataFramePath + "BlockNameToCoordinates_mean.csv")
+    BlockNameToCoordinates_closest.to_csv(DataFramePath + "BlockNameToCoordinates_closest.csv")
     WardToCoordinates_max.to_csv(DataFramePath + "WardToCoordinates_max.csv")
     WardToCoordinates_min.to_csv(DataFramePath + "WardToCoordinates_min.csv")
     WardToCoordinates_mean.to_csv(DataFramePath + "WardToCoordinates_mean.csv")
+    WardToCoordinates_closest.to_csv(DataFramePath + "WardToCoordinates_closest.csv")
     CommunityAreaToCoordinates_max.to_csv(DataFramePath + "CommunityAreaToCoordinates_max.csv")
     CommunityAreaToCoordinates_min.to_csv(DataFramePath + "CommunityAreaToCoordinates_min.csv")
     CommunityAreaToCoordinates_mean.to_csv(DataFramePath + "CommunityAreaToCoordinates_mean.csv")
+    CommunityAreaToCoordinates_closest.to_csv(DataFramePath + "CommunityAreaToCoordinates_closest.csv")
     print("Done!")
     
     readmeFile.write("Saving DataFrames", isStartTime=False)

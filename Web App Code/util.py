@@ -48,11 +48,17 @@ def checkFiles(pathString, fileNameList, fileNameExtension=""):
     return Exist
     
     
-def create_dataframe_coordinate_max_min_mean(PlaceName, Crime_data):
+def create_dataframe_coordinate_max_min_mean_closest(PlaceName, Crime_data):
     PlaceToCoordinates_max = (Crime_data[[PlaceName, 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby([PlaceName]).max()
     PlaceToCoordinates_min = (Crime_data[[PlaceName, 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby([PlaceName]).min()
     PlaceToCoordinates_mean = (Crime_data[[PlaceName, 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby([PlaceName]).mean()
-    return PlaceToCoordinates_max, PlaceToCoordinates_min, PlaceToCoordinates_mean
+    PlaceToCoordinates_closest = (Crime_data[[PlaceName, 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1))
+    PlaceToCoordinates_closest[['Lat', 'Lon']] = (Crime_data[['Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1))
+    PlaceToCoordinates_closest['Lat'] = PlaceToCoordinates_closest['Lat'].sub(PlaceToCoordinates_closest['Latitude'].mean())
+    PlaceToCoordinates_closest['Lon'] = PlaceToCoordinates_closest['Lon'].sub(PlaceToCoordinates_closest['Longitude'].mean())
+    PlaceToCoordinates_closest['Dist'] = PlaceToCoordinates_closest['Lat'].mul(PlaceToCoordinates_closest['Lat']).add(PlaceToCoordinates_closest['Lon'].mul(PlaceToCoordinates_closest['Lon']))
+    PlaceToCoordinates_closest = PlaceToCoordinates_closest.groupby([PlaceName]).min().drop(['Lat', 'Lon', 'Dist'], axis=1)
+    return PlaceToCoordinates_max, PlaceToCoordinates_min, PlaceToCoordinates_mean, PlaceToCoordinates_closest
     
 
 def createAndSaveMap(MapName, readmeFile, Crime_data, PreparedGraphPath):
