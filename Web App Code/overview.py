@@ -9,11 +9,12 @@ import folium
 import numpy as np
 import pandas as pd
 from streamlit_folium import folium_static
-import pydeck as pdk
 from dataAccess import return_dataFrames
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import themeUtil
+import mapUtil
+import gc
 
 def overviewPage():
     # Sidebar options
@@ -36,15 +37,6 @@ def overviewPage():
         crosstab.columns.name = None
         st.bar_chart(crosstab)
         
-        # Crime count by different types
-        TopValue = 10
-        st.write("Top 10 Most Crime Count Ranks:")
-        Blocks = return_dataFrames('Crime_data').groupby(['Block']).count().sort_values(['Case Number'], ascending=False)[:TopValue].index
-        Streets = return_dataFrames('Crime_data').groupby(['Street']).count().sort_values(['Case Number'], ascending=False)[:TopValue].index
-        Districts = return_dataFrames('Crime_data').groupby(['District']).count().sort_values(['Case Number'], ascending=False)[:TopValue].index
-        CommunityAreas = return_dataFrames('Crime_data').groupby(['Community Area']).count().sort_values(['Case Number'], ascending=False)[:TopValue].index
-        
-        st.write(CommunityAreas)
     
     with columns[1]:
         #st.map()
@@ -62,37 +54,7 @@ def overviewPage():
         width='100%',
         height='100%',)
         
-        #folium_static(map)
-        df = pd.DataFrame(np.array([[1, 1], [2, 2]]), columns = ['lat', 'lon'])
-        st.pydeck_chart(pdk.Deck(
-            map_style='mapbox://styles/mapbox/light-v9',
-            initial_view_state=pdk.ViewState(
-                latitude=41.8781,
-                longitude=-87.6298,
-                zoom=11,
-                pitch=50,
-                min_zoom=1
-            ),layers=[
-                pdk.Layer(
-                        'HexagonLayer',
-                        data=df,
-                        get_position='[lon, lat]',
-                        radius=200000,
-                        elevation_scale=400,
-                        elevation_range=[0, 1000],
-                        pickable=True,
-                        extruded=True,
-                    ),
-                # pdk.Layer(
-                #         'ScatterplotLayer',
-                #         data=df,
-                #         get_position='[lon, lat]',
-                #         get_color='[200, 30, 0, 160]',
-                #         get_radius=20,
-                #     ),
-                ],
-            )
-        )
+        #mapUtil.test()
     
     # The column 2
     columns = st.columns([5, 2, 3])

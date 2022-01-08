@@ -30,3 +30,4 @@ Config file are stored in ./.streamlit/. The port number was set to 18501. You m
 - `st.session_state` is independent in each session (browser tab)
 - `st.experimental_memo` can be used to reduce memory usage across multiple sessions
 - About [CSS hacking](https://discuss.streamlit.io/t/css-hacks-for-the-dumb/14501/3)
+- About [Pydeck](https://deckgl.readthedocs.io/en/latest/layer.html)

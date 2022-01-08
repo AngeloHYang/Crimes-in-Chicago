@@ -11,6 +11,7 @@ import gettext
 from init import init_app
 from introduction import introductionPage
 from overview import overviewPage
+from testP import testPage
 import themeUtil
 
 # just for code testing
@@ -22,7 +23,7 @@ init_app()
 test()
 
 if st.session_state['dataInitDone'] == True: # To make sure the system doesn't enter until data Init is done
-    PageSelect = st.sidebar.radio(label = "Navigation", options=["Introduction", "Overview", "Check the City", "Check by Community Area", "Check by District", "Check by Ward", "Check by Street", "Check by Block"])
+    PageSelect = st.sidebar.radio(label = "Navigation", options=["Introduction", "Overview", "Check the City", "Check by Community Area", "Check by District", "Check by Ward", "Check by Street", "Check by Block", 'Test'])
     
     if PageSelect == "Introduction":
         introductionPage()
@@ -40,5 +41,7 @@ if st.session_state['dataInitDone'] == True: # To make sure the system doesn't e
         pass
     elif PageSelect == "Check by Block":
         pass
+    elif PageSelect == 'Test':
+        testPage()
     else:
         st.error("Page Select ERROR!")
