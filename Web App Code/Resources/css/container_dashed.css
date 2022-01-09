@@ -1,0 +1,6 @@
+div[data-testid="stVerticalBlock"]{
+    padding: 5px;
+    border:1px #BFC5D3;
+    border-radius: 7px;
+    border-style: dashed;
+}

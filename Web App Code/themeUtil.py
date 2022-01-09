@@ -44,3 +44,6 @@ def hide_streamlit_header():
 
 def set_column_dashed():
     load_css(cssPath + 'column_dashed.css')
+    
+def set_container_dashed():
+    load_css(cssPath + 'container_dashed.css')
