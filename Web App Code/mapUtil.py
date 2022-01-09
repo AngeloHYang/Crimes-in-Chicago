@@ -14,7 +14,7 @@ def luck():
     theDataFrame = pd.DataFrame(return_dataFrames("Crime_data"))
     theDataFrame = pd.DataFrame(theDataFrame.groupby(theDataFrame['District']).count()).reset_index()
     theDataFrame = theDataFrame[['District', 'Case Number']].rename(columns={'Case Number': 'Count'})
-    extra = pd.DataFrame(return_dataFrames('DistrictToCoordinates_mean'))
+    extra = pd.DataFrame(return_dataFrames('DistrictToCoordinates_most'))
     theDataFrame = pd.merge(theDataFrame, extra, on='District')
     return theDataFrame
 
@@ -24,6 +24,7 @@ def generateDataframe(dataframe, locationType, supportingCountOption='Case Numbe
     dataframe = pd.DataFrame(dataframe)
     dataframe = pd.DataFrame(dataframe.groupby(dataframe[locationType]).count()).reset_index() 
     dataframe = dataframe[[locationType, supportingCountOption]].rename(columns={supportingCountOption: 'Count'})
+    
     if locationType == 'District':
         extra = pd.DataFrame(return_dataFrames('DistrictToCoordinates_most'))
         dataframe = pd.merge(dataframe, extra, on='District')
@@ -121,6 +122,7 @@ def getLayer(dataFrame, lower, upper, radius=200, elevation_scale=40, get_positi
     
 
 def drawMap(dataFrame, locationType, init_latitude=41.7785, init_longitude=-87.7152, init_zoom=10, radius=-114514, expectatedMaxElevation=-114514):
+    
     # If radius == -114514, the function will decide for you
     # Get Lower upper
     cut_off = dataFrame['Count'].std() * 3

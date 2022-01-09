@@ -68,9 +68,9 @@ def create_dataframe_coordinate_max_min_mean_closest_most(PlaceName, Crime_data)
     PlaceToCoordinates_most = PlaceToCoordinates_most['Location'].str.split(",", n = 2, expand = True)
     PlaceToCoordinates_most[0] = PlaceToCoordinates_most[0].str.lstrip('(')
     PlaceToCoordinates_most[1] = PlaceToCoordinates_most[1].str.rstrip(')')
-    PlaceToCoordinates_most.rename(columns={0: 'Latitude', 1: "Longtitude"}, inplace=True)
+    PlaceToCoordinates_most.rename(columns={0: 'Latitude', 1: "Longitude"}, inplace=True)
     PlaceToCoordinates_most.Latitude = PlaceToCoordinates_most.Latitude.astype(float)
-    PlaceToCoordinates_most.Longtitude = PlaceToCoordinates_most.Longtitude.astype(float)
+    PlaceToCoordinates_most.Longitude = PlaceToCoordinates_most.Longitude.astype(float)
     
     return PlaceToCoordinates_max, PlaceToCoordinates_min, PlaceToCoordinates_mean, PlaceToCoordinates_closest, PlaceToCoordinates_most
     
