@@ -46,9 +46,11 @@ class ReadmeUtil:
         else:
             self.timeTable[objectName]['endTime'] = theTime
         #print(self.timeTable)
+	self.saveFile()
         
         
     def saveFile(self):
+	self.filestream.fseek(0)
         self.TotalEndTime = time.time()
         # Total Start Time
         self.filestream.write("Total Start Time: " + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(self.TotalStartTime)) + "\n\n")
@@ -92,8 +94,10 @@ class ReadmeModelUill(ReadmeUtil):
             self.ERROR = False
             return False
         self.timeTable[objectName][evaluationType] = evaluationValue
+	self.saveFile()
         
     def saveFile(self):
+	self.filestream.fseek(0)
         self.TotalEndTime = time.time()
         # Total Start Time
         self.filestream.write("Total Start Time: " + time.strftime('%Y-%m-%d %H:%M:%S %z' , time.localtime(self.TotalStartTime)) + "\n\n")
