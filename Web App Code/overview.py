@@ -33,19 +33,19 @@ def overviewPage():
     if filterOn:
         with st.sidebar.form("Map Element Select Form"):
             # Crime Type Select
-            crimeTypeSelects = st.sidebar.multiselect(
+            crimeTypeSelects = st.multiselect(
                 label="Crime Type: (empty for all)", 
                 options=["THEFT", "BURGLARY", "MOTOR VEHICLE THEFT"],
                 help="Multi-select available"
             )
             # ELement Select
             options = pd.DataFrame(return_dataFrames('Crime_data')[mapGroupBy].drop_duplicates()).sort_values([mapGroupBy], ascending=True)
-            mapElementSelects = st.sidebar.multiselect(
+            mapElementSelects = st.multiselect(
                 label="Display only " + mapGroupBy + ": (empty for all)", 
                 options=options,
             )
             # Apply Filter Button
-            submitted = st.sidebar.form_submit_button("Apply Filter")
+            submitted = st.form_submit_button("Apply Filter")
             if submitted:
                 # Crime Type Query
                 crimeTypeQuery = ""
@@ -68,7 +68,7 @@ def overviewPage():
                         )
                     mapElementQuery = queryUtil.addParentheses(mapElementQuery)
                 # get selection
-                st.sidebar.session_state['mapQuery'] = queryUtil.addAnd(crimeTypeQuery, mapElementQuery)
+                st.session_state['mapQuery'] = queryUtil.addAnd(crimeTypeQuery, mapElementQuery)
                 #st.sidebar.text("..." + queryUtil.addAnd(crimeTypeQuery, mapElementQuery) + "...")
         #mapUtil.generateDataframe(Crime_data, mapGroupBy, 'Case Number')
         
