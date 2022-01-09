@@ -28,7 +28,7 @@ def generateDataframe(dataframe, locationType, supportingCountOption='Case Numbe
     if locationType == 'District':
         extra = pd.DataFrame(return_dataFrames('DistrictToCoordinates_most'))
         dataframe = pd.merge(dataframe, extra, on='District')
-        dataframe['District'] = dataframe.District.astype(int).astype(str)
+        dataframe['District'] = dataframe.District.astype(str)
     elif locationType == 'Street':
         extra = pd.DataFrame(return_dataFrames('StreetNameToCoordinates_most'))
         dataframe = pd.merge(dataframe, extra, on='Street')
@@ -42,7 +42,7 @@ def generateDataframe(dataframe, locationType, supportingCountOption='Case Numbe
     elif locationType == 'Ward':
         extra = pd.DataFrame(return_dataFrames('WardToCoordinates_most'))
         dataframe = pd.merge(dataframe, extra, on='Ward')
-        dataframe['Ward'] = dataframe.Ward.astype(int).astype(str)
+        dataframe['Ward'] = dataframe.Ward.astype(str)
     else:
         return False
     return dataframe
@@ -165,9 +165,9 @@ def drawMap(dataFrame, locationType, init_latitude=41.7785, init_longitude=-87.7
         elif locationType == 'Block':
             radius = 10
         elif locationType == 'Community Area':
-            radius = 1000
+            radius = 500
         elif locationType == 'Ward':
-            radius = 1000
+            radius = 500
         
     # lines of the count value should belong to the same layer
     dataFrame.sort_values(['Count'], inplace=True)

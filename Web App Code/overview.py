@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import themeUtil
 import mapUtil
+import util
+import queryUtil
 import gc
 
 def overviewPage():
@@ -21,9 +23,57 @@ def overviewPage():
     st.sidebar.write("---")
     sidebar = st.sidebar.container()
     with sidebar:
-        st.write("Map Options:")
-        mapGroupBy = st.selectbox(label="Group by:", options=["District", "Ward", "Community Area", "Street", "Block"])
-        st.warning("Viewing by Streets or Blocks may slow down your computer! Please be careful!")
+        st.subheader("Map Options:")
+        # Map Group By
+        mapGroupBy = st.selectbox(label="Map Type:", options=["District", "Ward", "Community Area", "Street", "Block"])
+        st.warning("Viewing by all Streets or Blocks may slow down your computer since the number might be large! Please be careful!")
+        # Map Filter
+        filterOn = st.checkbox("Turn On Map Filter")
+        if not filterOn:
+            if 'mapQuery' in st.session_state and st.session_state['mapQuery'] != "":
+                del st.session_state['mapQuery']
+        if filterOn:
+            with st.form("Map Element Select Form"):
+                # Crime Type Select
+                crimeTypeSelects = st.multiselect(
+                    label="Crime Type: (empty for all)", 
+                    options=["THEFT", "BURGLARY", "MOTOR VEHICLE THEFT"],
+                    help="Multi-select available"
+                )
+                # ELement Select
+                options = pd.DataFrame(return_dataFrames('Crime_data')[mapGroupBy].drop_duplicates()).sort_values([mapGroupBy], ascending=True)
+                mapElementSelects = st.multiselect(
+                    label="Display only " + mapGroupBy + ": (empty for all)", 
+                    options=options,
+                )
+                # Apply Filter Button
+                submitted = st.form_submit_button("Apply Filter")
+                if submitted:
+                    # Crime Type Query
+                    crimeTypeQuery = ""
+                    if len(crimeTypeSelects) > 0:
+                        for i in crimeTypeSelects:
+                            crimeTypeQuery = queryUtil.addOr(
+                                crimeTypeQuery, 
+                                queryUtil.createSingleSelection('Primary Type', i))
+                        crimeTypeQuery = queryUtil.addParentheses(crimeTypeQuery)
+                    # Map Element Query
+                    mapElementQuery = ""
+                    if len(mapElementSelects) > 0:
+                        toWhatIsStr = True
+                        if mapGroupBy == 'District' or mapGroupBy == 'Ward' or mapGroupBy == 'Community Area' :
+                            toWhatIsStr = False
+                        for i in mapElementSelects:
+                            mapElementQuery = queryUtil.addOr(
+                                mapElementQuery, 
+                                queryUtil.createSingleSelection(mapGroupBy, i, toWhatIsStr=toWhatIsStr)
+                            )
+                        mapElementQuery = queryUtil.addParentheses(mapElementQuery)
+                    # get selection
+                    st.session_state['mapQuery'] = queryUtil.addAnd(crimeTypeQuery, mapElementQuery)
+                    #st.text("..." + queryUtil.addAnd(crimeTypeQuery, mapElementQuery) + "...")
+            #mapUtil.generateDataframe(Crime_data, mapGroupBy, 'Case Number')
+        
     
     # Header
     st.header("Chicago Overview")
@@ -50,8 +100,12 @@ def overviewPage():
     
     with columns[1]:
         # The map
+        if 'mapQuery' in st.session_state and st.session_state['mapQuery'] != "":
+            theDataframeForMap = return_dataFrames('Crime_data').query(st.session_state['mapQuery'])
+        else:
+            theDataframeForMap = return_dataFrames('Crime_data')
         mapUtil.drawMap(
-            mapUtil.generateDataframe(return_dataFrames('Crime_data'), mapGroupBy, 'Case Number'), 
+            mapUtil.generateDataframe(theDataframeForMap, mapGroupBy, 'Case Number'), 
             locationType=mapGroupBy)
     
     # The column 2

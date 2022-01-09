@@ -309,6 +309,9 @@ def return_dataFrames(dataframeName):
             theFile = pd.read_csv(fileName, parse_dates=['Date'])
             if dataframeName == 'Crime_data' or dataframeName == 'Crime_data_2003_to_2004':
                 theFile['Street'] = pd.DataFrame(generateStreets(theFile))
+                theFile['Ward'] = theFile['Ward'].astype(int)
+                theFile['Community Area'] = theFile['Community Area'].astype(int)
+                theFile['District'] = theFile['District'].astype(int)
         except Exception as e:
             theFile = pd.read_csv(fileName)
     return theFile
