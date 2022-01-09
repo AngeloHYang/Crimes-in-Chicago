@@ -23,7 +23,7 @@ def overviewPage():
     with sidebar:
         st.write("Map Options:")
         mapGroupBy = st.selectbox(label="Group by:", options=["District", "Ward", "Community Area", "Street", "Block"])
-        st.write(mapGroupBy)
+        st.warning("Viewing by Streets or Blocks may slow down your computer! Please be careful!")
     
     # Header
     st.header("Chicago Overview")
@@ -51,7 +51,7 @@ def overviewPage():
     with columns[1]:
         # The map
         mapUtil.drawMap(
-            mapUtil.generateDataframe(return_dataFrames('Crime_data')[:100], mapGroupBy, 'Case Number'), 
+            mapUtil.generateDataframe(return_dataFrames('Crime_data'), mapGroupBy, 'Case Number'), 
             locationType=mapGroupBy)
     
     # The column 2

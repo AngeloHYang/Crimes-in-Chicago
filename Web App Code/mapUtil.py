@@ -159,7 +159,7 @@ def drawMap(dataFrame, locationType, init_latitude=41.7785, init_longitude=-87.7
     #radius
     if radius==-114514:
         if locationType == 'District':
-            radius = 200
+            radius = 1000
         elif locationType == 'Street':
             radius = 10
         elif locationType == 'Block':
