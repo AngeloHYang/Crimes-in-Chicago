@@ -21,58 +21,56 @@ import gc
 def overviewPage():
     # Sidebar options
     st.sidebar.write("---")
-    sidebar = st.sidebar.container()
-    with sidebar:
-        st.subheader("Map Options:")
-        # Map Group By
-        mapGroupBy = st.selectbox(label="Map Type:", options=["District", "Ward", "Community Area", "Street", "Block"])
-        st.warning("Viewing by all Streets or Blocks may slow down your computer since the number might be large! Please be careful!")
-        # Map Filter
-        filterOn = st.checkbox("Turn On Map Filter")
-        if not filterOn:
-            if 'mapQuery' in st.session_state and st.session_state['mapQuery'] != "":
-                del st.session_state['mapQuery']
-        if filterOn:
-            with st.form("Map Element Select Form"):
-                # Crime Type Select
-                crimeTypeSelects = st.multiselect(
-                    label="Crime Type: (empty for all)", 
-                    options=["THEFT", "BURGLARY", "MOTOR VEHICLE THEFT"],
-                    help="Multi-select available"
-                )
-                # ELement Select
-                options = pd.DataFrame(return_dataFrames('Crime_data')[mapGroupBy].drop_duplicates()).sort_values([mapGroupBy], ascending=True)
-                mapElementSelects = st.multiselect(
-                    label="Display only " + mapGroupBy + ": (empty for all)", 
-                    options=options,
-                )
-                # Apply Filter Button
-                submitted = st.form_submit_button("Apply Filter")
-                if submitted:
-                    # Crime Type Query
-                    crimeTypeQuery = ""
-                    if len(crimeTypeSelects) > 0:
-                        for i in crimeTypeSelects:
-                            crimeTypeQuery = queryUtil.addOr(
-                                crimeTypeQuery, 
-                                queryUtil.createSingleSelection('Primary Type', i))
-                        crimeTypeQuery = queryUtil.addParentheses(crimeTypeQuery)
-                    # Map Element Query
-                    mapElementQuery = ""
-                    if len(mapElementSelects) > 0:
-                        toWhatIsStr = True
-                        if mapGroupBy == 'District' or mapGroupBy == 'Ward' or mapGroupBy == 'Community Area' :
-                            toWhatIsStr = False
-                        for i in mapElementSelects:
-                            mapElementQuery = queryUtil.addOr(
-                                mapElementQuery, 
-                                queryUtil.createSingleSelection(mapGroupBy, i, toWhatIsStr=toWhatIsStr)
-                            )
-                        mapElementQuery = queryUtil.addParentheses(mapElementQuery)
-                    # get selection
-                    st.session_state['mapQuery'] = queryUtil.addAnd(crimeTypeQuery, mapElementQuery)
-                    #st.text("..." + queryUtil.addAnd(crimeTypeQuery, mapElementQuery) + "...")
-            #mapUtil.generateDataframe(Crime_data, mapGroupBy, 'Case Number')
+    st.sidebar.subheader("Map Options:")
+    # Map Group By
+    mapGroupBy = st.sidebar.selectbox(label="Map Type:", options=["District", "Ward", "Community Area", "Street", "Block"])
+    st.sidebar.warning("Viewing by all Streets or Blocks may slow down your computer since the number might be large! Please be careful!")
+    # Map Filter
+    filterOn = st.sidebar.checkbox("Turn On Map Filter")
+    if not filterOn:
+        if 'mapQuery' in st.session_state and st.session_state['mapQuery'] != "":
+            del st.session_state['mapQuery']
+    if filterOn:
+        with st.sidebar.form("Map Element Select Form"):
+            # Crime Type Select
+            crimeTypeSelects = st.sidebar.multiselect(
+                label="Crime Type: (empty for all)", 
+                options=["THEFT", "BURGLARY", "MOTOR VEHICLE THEFT"],
+                help="Multi-select available"
+            )
+            # ELement Select
+            options = pd.DataFrame(return_dataFrames('Crime_data')[mapGroupBy].drop_duplicates()).sort_values([mapGroupBy], ascending=True)
+            mapElementSelects = st.sidebar.multiselect(
+                label="Display only " + mapGroupBy + ": (empty for all)", 
+                options=options,
+            )
+            # Apply Filter Button
+            submitted = st.sidebar.form_submit_button("Apply Filter")
+            if submitted:
+                # Crime Type Query
+                crimeTypeQuery = ""
+                if len(crimeTypeSelects) > 0:
+                    for i in crimeTypeSelects:
+                        crimeTypeQuery = queryUtil.addOr(
+                            crimeTypeQuery, 
+                            queryUtil.createSingleSelection('Primary Type', i))
+                    crimeTypeQuery = queryUtil.addParentheses(crimeTypeQuery)
+                # Map Element Query
+                mapElementQuery = ""
+                if len(mapElementSelects) > 0:
+                    toWhatIsStr = True
+                    if mapGroupBy == 'District' or mapGroupBy == 'Ward' or mapGroupBy == 'Community Area' :
+                        toWhatIsStr = False
+                    for i in mapElementSelects:
+                        mapElementQuery = queryUtil.addOr(
+                            mapElementQuery, 
+                            queryUtil.createSingleSelection(mapGroupBy, i, toWhatIsStr=toWhatIsStr)
+                        )
+                    mapElementQuery = queryUtil.addParentheses(mapElementQuery)
+                # get selection
+                st.sidebar.session_state['mapQuery'] = queryUtil.addAnd(crimeTypeQuery, mapElementQuery)
+                #st.sidebar.text("..." + queryUtil.addAnd(crimeTypeQuery, mapElementQuery) + "...")
+        #mapUtil.generateDataframe(Crime_data, mapGroupBy, 'Case Number')
         
     
     # Header
