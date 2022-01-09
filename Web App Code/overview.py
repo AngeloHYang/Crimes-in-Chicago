@@ -21,8 +21,9 @@ def overviewPage():
     st.sidebar.write("---")
     sidebar = st.sidebar.container()
     with sidebar:
-        st.write('test')
-        st.write('test')
+        st.write("Map Options:")
+        mapGroupBy = st.selectbox(label="Group by:", options=["District", "Ward", "Community Area", "Street", "Block"])
+        st.write(mapGroupBy)
     
     # Header
     st.header("Chicago Overview")
@@ -49,23 +50,9 @@ def overviewPage():
     
     with columns[1]:
         # The map
-        #st.map()
-        # map = folium.Map(
-        # min_zoom=9,
-        # zoom_start = 11,
-        # location=[41.8781, -87.6298],
-        # zoom_control=True,
-        # control_scale=True,
-        # max_lat=43,
-        # max_lon=-86,
-        # min_lat=39,
-        # min_lon=-89,
-        # max_bounds=True,
-        # width='100%',
-        # height='100%',)
         mapUtil.drawMap(
-            mapUtil.generateDataframe(return_dataFrames('Crime_data')[:10], 'Block', 'Case Number'), 
-            locationType='Block')
+            mapUtil.generateDataframe(return_dataFrames('Crime_data')[:100], mapGroupBy, 'Case Number'), 
+            locationType=mapGroupBy)
     
     # The column 2
     columns = st.columns([5, 2, 3])

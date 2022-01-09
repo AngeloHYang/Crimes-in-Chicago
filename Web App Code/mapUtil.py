@@ -25,21 +25,21 @@ def generateDataframe(dataframe, locationType, supportingCountOption='Case Numbe
     dataframe = pd.DataFrame(dataframe.groupby(dataframe[locationType]).count()).reset_index() 
     dataframe = dataframe[[locationType, supportingCountOption]].rename(columns={supportingCountOption: 'Count'})
     if locationType == 'District':
-        extra = pd.DataFrame(return_dataFrames('DistrictToCoordinates_closest'))
+        extra = pd.DataFrame(return_dataFrames('DistrictToCoordinates_most'))
         dataframe = pd.merge(dataframe, extra, on='District')
         dataframe['District'] = dataframe.District.astype(int).astype(str)
     elif locationType == 'Street':
-        extra = pd.DataFrame(return_dataFrames('StreetNameToCoordinates_closest'))
+        extra = pd.DataFrame(return_dataFrames('StreetNameToCoordinates_most'))
         dataframe = pd.merge(dataframe, extra, on='Street')
     elif locationType == 'Block':
-        extra = pd.DataFrame(return_dataFrames('BlockNameToCoordinates_closest'))
+        extra = pd.DataFrame(return_dataFrames('BlockNameToCoordinates_most'))
         dataframe = pd.merge(dataframe, extra, on='Block')
     elif locationType == 'Community Area':
-        extra = pd.DataFrame(return_dataFrames('CommunityAreaToCoordinates_closest'))
+        extra = pd.DataFrame(return_dataFrames('CommunityAreaToCoordinates_most'))
         dataframe = pd.merge(dataframe, extra, on='Community Area')
         dataframe['Community Area'] = dataframe['Community Area'].astype(int).astype(str)
     elif locationType == 'Ward':
-        extra = pd.DataFrame(return_dataFrames('WardToCoordinates_closest'))
+        extra = pd.DataFrame(return_dataFrames('WardToCoordinates_most'))
         dataframe = pd.merge(dataframe, extra, on='Ward')
         dataframe['Ward'] = dataframe.Ward.astype(int).astype(str)
     else:
@@ -128,7 +128,7 @@ def drawMap(dataFrame, locationType, init_latitude=41.7785, init_longitude=-87.7
     #st.write("Lower: ", lower, " Upper: ", upper, " Cut_off: ", cut_off)
     
     expectatedMax = {'District': 100,
-                     'Street': 100,
+                     'Street': 20,
                      'Block': 20,
                      'Ward': 100,
                      'Community Area': 100}
@@ -157,9 +157,9 @@ def drawMap(dataFrame, locationType, init_latitude=41.7785, init_longitude=-87.7
     #radius
     if radius==-114514:
         if locationType == 'District':
-            radius = 1000
+            radius = 200
         elif locationType == 'Street':
-            radius = 1000
+            radius = 10
         elif locationType == 'Block':
             radius = 10
         elif locationType == 'Community Area':

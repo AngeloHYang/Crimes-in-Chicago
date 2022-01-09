@@ -48,7 +48,7 @@ def checkFiles(pathString, fileNameList, fileNameExtension=""):
     return Exist
     
     
-def create_dataframe_coordinate_max_min_mean_closest(PlaceName, Crime_data):
+def create_dataframe_coordinate_max_min_mean_closest_most(PlaceName, Crime_data):
     PlaceToCoordinates_max = (Crime_data[[PlaceName, 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby([PlaceName]).max()
     PlaceToCoordinates_min = (Crime_data[[PlaceName, 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby([PlaceName]).min()
     PlaceToCoordinates_mean = (Crime_data[[PlaceName, 'Latitude', 'Longitude']].reset_index().drop(['Case Number'], axis=1)).groupby([PlaceName]).mean()
@@ -58,7 +58,21 @@ def create_dataframe_coordinate_max_min_mean_closest(PlaceName, Crime_data):
     PlaceToCoordinates_closest['Lon'] = PlaceToCoordinates_closest['Lon'].sub(PlaceToCoordinates_closest['Longitude'].mean())
     PlaceToCoordinates_closest['Dist'] = PlaceToCoordinates_closest['Lat'].mul(PlaceToCoordinates_closest['Lat']).add(PlaceToCoordinates_closest['Lon'].mul(PlaceToCoordinates_closest['Lon']))
     PlaceToCoordinates_closest = PlaceToCoordinates_closest.groupby([PlaceName]).min().drop(['Lat', 'Lon', 'Dist'], axis=1)
-    return PlaceToCoordinates_max, PlaceToCoordinates_min, PlaceToCoordinates_mean, PlaceToCoordinates_closest
+    
+    # Mode
+    ## Read
+    PlaceToCoordinates_most = (Crime_data[[PlaceName, 'Location']].reset_index().drop(['Case Number'], axis=1))
+    ## Find
+    PlaceToCoordinates_most = PlaceToCoordinates_most.groupby([PlaceName]).agg(lambda x: x.value_counts().index[0])
+    ## split and combine
+    PlaceToCoordinates_most = PlaceToCoordinates_most['Location'].str.split(",", n = 2, expand = True)
+    PlaceToCoordinates_most[0] = PlaceToCoordinates_most[0].str.lstrip('(')
+    PlaceToCoordinates_most[1] = PlaceToCoordinates_most[1].str.rstrip(')')
+    PlaceToCoordinates_most.rename(columns={0: 'Latitude', 1: "Longtitude"}, inplace=True)
+    PlaceToCoordinates_most.Latitude = PlaceToCoordinates_most.Latitude.astype(float)
+    PlaceToCoordinates_most.Longtitude = PlaceToCoordinates_most.Longtitude.astype(float)
+    
+    return PlaceToCoordinates_max, PlaceToCoordinates_min, PlaceToCoordinates_mean, PlaceToCoordinates_closest, PlaceToCoordinates_most
     
 
 def createAndSaveMap(MapName, readmeFile, Crime_data, PreparedGraphPath):
