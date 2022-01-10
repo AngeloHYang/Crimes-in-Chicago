@@ -60,18 +60,25 @@ def get_CrimeType_and_Location_query(CrimeTypeArray, LocationType, LocationValue
                 createSingleSelection('Primary Type', i, toWhatIsStr=True, how="==")
             )
         arrays[0] = addParentheses(arrays[0])
+    else:
+        arrays[0] = ""
             
     # Location Values
     toWhatIsStr = True
-    if LocationType == 'District' or LocationType == 'Ward' or LocationType == 'Community Area' :
-        toWhatIsStr = False
-    if len(LocationValueArray) > 0:
-        for i in LocationValueArray:
-            arrays[1] = addOr(
-                arrays[1],
-                createSingleSelection(LocationType, i, toWhatIsStr=toWhatIsStr, how="==")
-            )
-        arrays[1] = addParentheses(arrays[1])
+    if LocationType != 'Whole City':
+        if LocationType == 'District' or LocationType == 'Ward' or LocationType == 'Community Area' :
+            toWhatIsStr = False
+        if len(LocationValueArray) > 0:
+            for i in LocationValueArray:
+                arrays[1] = addOr(
+                    arrays[1],
+                    createSingleSelection(LocationType, i, toWhatIsStr=toWhatIsStr, how="==")
+                )
+            arrays[1] = addParentheses(arrays[1])
+        else:
+            arrays[1] = ''
+    else:
+        arrays[1] = ''
     
     queryResult = addAnd(arrays[0], arrays[1])
     return queryResult

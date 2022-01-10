@@ -42,11 +42,11 @@ def overviewPage():
                 default = "THEFT"
             )
             # ELement Select
-            options = pd.DataFrame(return_dataFrames('Crime_data')[mapGroupBy].drop_duplicates()).sort_values([mapGroupBy], ascending=True)
+            options = list(pd.DataFrame(return_dataFrames('Crime_data')[mapGroupBy].drop_duplicates()).sort_values([mapGroupBy], ascending=True)[mapGroupBy])
             mapElementSelects = st.multiselect(
                 label="Display only " + mapGroupBy + ":", 
                 options=options,
-                default=options.loc[0],
+                default=options[0],
                 help="Multi-select available  \n  Empty for all"
             )
             # Apply Filter Button

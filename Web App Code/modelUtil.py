@@ -347,6 +347,7 @@ def getEvaluationModelToUse(TimePrecision, CrimeTypeArray, LocationType, Locatio
 
 def predictMoment(model, moment):
     future = pd.DataFrame(columns=['ds'])
+    st.write(moment)
     future = future.append({'ds': moment}, ignore_index=True)
     user_forecast = model.predict(future)
     result = user_forecast['yhat'][0]
@@ -355,12 +356,16 @@ def predictMoment(model, moment):
 
 def predictPeriod(model, startTime, endTime, timePrecision):
     future = pd.DataFrame(columns=['ds'])
-    future['ds'] = pd.date_range(
-        startTime, 
-        endTime, 
-        freq=dateUtil.TimePrecision_to_timeType_dict[timePrecision]
-    )
+    
+    # future['ds'] = pd.date_range(
+    #     "2000-01-01", 
+    #     '2002-01-01', 
+    #     freq=dateUtil.TimePrecision_to_timeType_dict[timePrecision]
+    # )
+    future['ds'] = dateUtil.generateTimeList(startTime, endTime, freq=dateUtil.TimePrecision_to_timeType_dict[timePrecision])
+
     user_forecast = model.predict(future)
+    
     result = user_forecast[['ds', 'yhat']]
     #result = user_forecast['yhat']
     

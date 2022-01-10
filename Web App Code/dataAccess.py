@@ -52,6 +52,7 @@ def load_fullData():
         del Crime_2005_to_2007
         del Crime_2008_to_2011
         del Crime_2012_to_2017
+        Crime_data['Block'] = Crime_data['Block'].str.upper()
         Crime_data_fuller = Crime_data.copy()
         Crime_data_2003_to_2004 = Crime_data.copy()
         gc.collect()
@@ -72,6 +73,7 @@ def load_fullData():
         Crime_data.drop(['IUCR', 'ID', 'Description', 'Arrest', 'Domestic', 'Beat', 'FBI Code', 'Updated On', 'Latitude', 'Longitude', 'Location', 'X Coordinate', 'Y Coordinate'], inplace=True, axis=1)
         print("Done!")
         print("Handling NaN, null, None, 0, etc...", end="")
+        Crime_data = Crime_data.replace('nan', np.NaN)
         Crime_data.dropna(inplace=True)
         print("Done!")
         print("Handling formats...", end="")
@@ -101,6 +103,7 @@ def load_fullData():
         print("Done!")
         print("Handling NaN, null, None, 0, etc...", end="")
         Crime_data_fuller[['X Coordinate', 'Y Coordinate', 'Latitude', 'Longitude']] = Crime_data_fuller[['X Coordinate', 'Y Coordinate', 'Latitude', 'Longitude']].replace(0, np.NaN)
+        Crime_data_fuller = Crime_data_fuller.replace('nan', np.NaN)
         Crime_data_fuller.dropna(inplace=True)
         print("Done!")
         print("Handling formats...", end="")
@@ -125,6 +128,7 @@ def load_fullData():
         Crime_data_2003_to_2004.drop(['IUCR', 'ID', 'Description', 'Arrest', 'Domestic', 'Beat', 'FBI Code', 'Updated On', 'Latitude', 'Longitude', 'Location', 'X Coordinate', 'Y Coordinate'], inplace=True, axis=1)
         print("Done!")
         print("Handling NaN, null, None, 0, etc...", end="")
+        Crime_data_2003_to_2004 = Crime_data_2003_to_2004.replace('nan', np.NaN)
         Crime_data_2003_to_2004.dropna(inplace=True)
         print("Done!")
         print("Handling formats...", end="")
@@ -316,7 +320,7 @@ def return_dataFrames(dataframeName):
             theFile = pd.read_csv(fileName)
     return theFile
 
-@st.experimental_memo
+#@st.experimental_memo
 def generateStreets(Crime_data):
     streetNames = []
     for i in Crime_data['Block']:

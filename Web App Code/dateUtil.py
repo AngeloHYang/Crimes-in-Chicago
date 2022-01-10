@@ -13,6 +13,42 @@ TimePrecision_to_timeType_dict = {"Hour": "H", "Day": "D", "Month": "M", "Year":
 def getTimePrecisionValue(TimePrecisionName):
     return timePrecision.index(TimePrecisionName)
 
+def generateTimeList(startTime, endTime, freq):
+    
+    if freq == 'H':
+        startTime = datetime.datetime(year=startTime.year, month=startTime.month, day=startTime.day, hour=startTime.hour)
+        endTime = datetime.datetime(year=endTime.year, month=endTime.month, day=endTime.day, hour=endTime.hour)
+    elif freq == 'D':
+        startTime = datetime.datetime(year=startTime.year, month=startTime.month, day=startTime.day)
+        endTime = datetime.datetime(year=endTime.year, month=endTime.month, day=endTime.day, hour=endTime.hour)    
+    elif freq == 'M':
+        startTime = datetime.datetime(year=startTime.year, month=startTime.month, day=1)
+        endTime = datetime.datetime(year=endTime.year, month=endTime.month, day=1)
+    elif freq == 'Y':
+        startTime = datetime.datetime(year=startTime.year, month=1, day=1)
+        endTime = datetime.datetime(year=endTime.year, month=1, day=1)
+    
+    theTime = startTime
+    theList = []
+    
+    while theTime <= endTime:
+        theList.append(theTime)
+        if freq == 'H':
+            theTime += datetime.timedelta(hours=1)
+        elif freq == 'D':
+            theTime += datetime.timedelta(days=1)
+        elif freq == 'M':
+            if theTime.month == 12:
+                theTime = datetime.datetime(theTime.year + 1, 1, day=1)
+            else:
+                theTime = datetime.datetime(theTime.year, theTime.month + 1, day=1)
+        elif freq == 'Y':
+            theTime = datetime.datetime(theTime.year + 1, 1, day=1)
+            
+    return theList
+        
+        
+
 def customDatePicker(container, labelName, limit='Day'):
     with container:
         howMany = len(timePrecision) - getTimePrecisionValue(limit)
