@@ -38,7 +38,7 @@ def overviewPage():
             crimeTypeSelects = st.multiselect(
                 label="Crime Type:", 
                 options=["THEFT", "BURGLARY", "MOTOR VEHICLE THEFT"],
-                help="Multi-select available; Empty for all",
+                help="Multi-select available  \n  Empty for all",
                 default = "THEFT"
             )
             # ELement Select
@@ -47,7 +47,7 @@ def overviewPage():
                 label="Display only " + mapGroupBy + ":", 
                 options=options,
                 default=options.loc[0],
-                help="Multi-select available; Empty for all"
+                help="Multi-select available  \n  Empty for all"
             )
             # Apply Filter Button
             submitted = st.form_submit_button("Apply Filter")

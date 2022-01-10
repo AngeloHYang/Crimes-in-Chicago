@@ -4,6 +4,8 @@
 import pandas as pd
 import math
 import queryUtil
+import dataAccess
+import dateUtil
 
 # evaluation related
 from sklearn.metrics import mean_absolute_error
@@ -19,11 +21,31 @@ import json
 from fbprophet.serialize import model_to_json, model_from_json
 
 
+def createDatasetForEvaluation(Crime_data_2003_to_2004, timeType, selectingCondition):
+    # Apply data selecting to Crime_data_2003_to_2004
+    selectAll = True if selectingCondition == "" or selectingCondition == False else False
+    
+    if selectAll:
+        theRestDf = Crime_data_2003_to_2004[[True]*len(Crime_data_2003_to_2004)]
+    else:
+        theRestDf = Crime_data_2003_to_2004.query(selectingCondition)
+    theDataset_2003_to_2004 = theRestDf.groupby(theRestDf['Date'].dt.to_period(timeType)).count()['Block']
+    theDataset_2003_to_2004 = pd.DataFrame(theDataset_2003_to_2004).reset_index().rename(columns={"Date": "ds", "Block": "y"})
+    theDataset_2003_to_2004['ds'] = pd.to_datetime(theDataset_2003_to_2004['ds'].dt.to_timestamp('s'), format="%m/%d/%Y %I:%M:%S")
+    
+    # Check if enough data
+    restDataExist = True
+    if int(theDataset_2003_to_2004.count()['ds']) < 2: restDataExist = False
+    
+    return theDataset_2003_to_2004, restDataExist
+
     # timeType can be H, D, W, M, Y
     # There'll be no model if there's less than 2 data.
     # First False for model, third False for no evaluation
-def createProphetModel(neededDf, timeType, selectingCondition, Crime_data_2003_to_2004, selectAll = True):
+def createProphetModel(neededDf, timeType, selectingCondition):
     #selectingCondition = (neededDf['Primary Type'] == 'BURGLARY') & (neededDf['Location Description'] == 'STREET')
+    selectAll = True if selectingCondition == "" or selectingCondition == False else False
+    
     # Apply data selecting to neededDf
     if selectAll:
         theDf = neededDf[[True]*len(neededDf)]
@@ -33,19 +55,12 @@ def createProphetModel(neededDf, timeType, selectingCondition, Crime_data_2003_t
     theDataset = pd.DataFrame(theDataset).reset_index().rename(columns={"Date": "ds", "Block": "y"})
     theDataset['ds'] = pd.to_datetime(theDataset['ds'].dt.to_timestamp('s'), format="%m/%d/%Y %I:%M:%S")
     
-    # Apply data selecting to Crime_data_2003_to_2004
-    if selectAll:
-        theRestDf = Crime_data_2003_to_2004[[True]*len(Crime_data_2003_to_2004)]
-    else:
-        theRestDf = Crime_data_2003_to_2004.query(selectingCondition)
-    theDataset_2003_to_2004 = theRestDf.groupby(theRestDf['Date'].dt.to_period(timeType)).count()['Block']
-    theDataset_2003_to_2004 = pd.DataFrame(theDataset_2003_to_2004).reset_index().rename(columns={"Date": "ds", "Block": "y"})
-    theDataset_2003_to_2004['ds'] = pd.to_datetime(theDataset_2003_to_2004['ds'].dt.to_timestamp('s'), format="%m/%d/%Y %I:%M:%S")
+    
     
     # Check if there not enough data
-    ModelExist, restDataExist = True, True
+    ModelExist = True
     if int(theDataset.count()['ds']) < 2: ModelExist = False
-    if int(theDataset_2003_to_2004.count()['ds']) < 1: restDataExist = False
+    
     
     # Added Location info to theDataset
     # LocationDiscriptionName = list(theDf['Location Description'].drop_duplicates())
@@ -84,7 +99,7 @@ def createProphetModel(neededDf, timeType, selectingCondition, Crime_data_2003_t
         prophet = False
         
     # First False for model, second False for no evaluation
-    return prophet, theDataset_2003_to_2004, restDataExist
+    return prophet
 
 def generateModelName(timeType, crimeType, locationType, locationValue):
     # timeType can be H, D, W, M, Y
@@ -197,7 +212,26 @@ def saveProphetModel(ModelPath, model, modelName):
         return True
     return False
     
-def evaluateModel(model, restDataframe, readmeFile, model_name):
+def evaluateModel(model, restDataframe):
+    y_true = restDataframe
+    y_predicted = pd.DataFrame(restDataframe['ds'])
+    y_predicted = model.predict(y_predicted)
+    
+    y_true = y_true['y'].values
+    y_predicted = y_predicted['yhat'].values
+    
+    string1 = ('MAE: %.3f' % mean_absolute_error(y_true, y_predicted))
+    string2 = ('MSE: %.3f' % mean_squared_error(y_true, y_predicted))
+    string3 = ('RMSE: %.3f' % math.sqrt(mean_squared_error(y_true, y_predicted)))
+    string4 = ('Explained variance: %.3f' % explained_variance_score(y_true, y_predicted))
+    string5 = ('Coefficient of determination: %.3f' % r2_score(y_true, y_predicted))
+    
+    string = string1 + "  \n  " + string2 + "  \n  " + string3 + "  \n  " + string4 + "  \n  " + string5
+    
+    return string
+    
+
+def evaluateModelAndSave(model, restDataframe, readmeFile, model_name):
     y_true = restDataframe
     y_predicted = pd.DataFrame(restDataframe['ds'])
     y_predicted = model.predict(y_predicted)
@@ -221,90 +255,84 @@ def modelErrorDetect(Reason, timeType, crimeType, locationType):
 
 # This is the method that does the all the process of creating ONE model creation
 # if locationType == All, locationValue will be ignored
-def handleTheModel(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType, crimeType, locationType, locationValue = ""):
-    # get name
-    model_name = generateModelName(timeType, crimeType, locationType, locationValue)
-    if not model_name:
-        modelErrorDetect("model_name error!", timeType, crimeType, locationType)
-        return False
-    readmeFile.write(model_name)
-    print("Creating", model_name, "...", end="")
+# def handleTheModel(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType, crimeType, locationType, locationValue = ""):
+#     # get name
+#     model_name = generateModelName(timeType, crimeType, locationType, locationValue)
+#     if not model_name:
+#         modelErrorDetect("model_name error!", timeType, crimeType, locationType)
+#         return False
+#     readmeFile.write(model_name)
+#     print("Creating", model_name, "...", end="")
     
-    # get condition
-    selectingCondition, selectAll = generateModelSelection(crimeType, locationType, locationValue)
-    if not (selectingCondition or selectAll):
-        modelErrorDetect("Selecting Condition error!", timeType, crimeType, locationType)
-        return False
+#     # get condition
+#     selectingCondition, selectAll = generateModelSelection(crimeType, locationType, locationValue)
+#     if not (selectingCondition or selectAll):
+#         modelErrorDetect("Selecting Condition error!", timeType, crimeType, locationType)
+#         return False
     
-    # Create model
-    theModel, restDataframe, restDataframeMatter = createProphetModel(neededDf, timeType, selectingCondition, Crime_data_2003_to_2004, selectAll)
-    readmeFile.write(model_name, isStartTime=False)
+#     # Create model
+#     theModel, restDataframe, restDataframeMatter = createProphetModel(neededDf, timeType, selectingCondition, Crime_data_2003_to_2004, selectAll)
+#     readmeFile.write(model_name, isStartTime=False)
     
-    # Evaluate the model
-    ## If the model does exist
-    if theModel:
-        ## If evaluation does exist
-        if restDataframeMatter:
-            evaluateModel(theModel, restDataframe, readmeFile, model_name)
-        ## If evaluation doesn't exist
-        elif not restDataframeMatter:
-            readmeFile.writeEvaluation(model_name, "Evaluation", False)
-        if not saveProphetModel(ModelPath, theModel, model_name):
-            modelErrorDetect("Save Model error!", timeType, crimeType, locationType)
-            return False
-    elif not theModel:
-        # When the model doesn't exist
-        readmeFile.writeEvaluation(model_name, "Existance", False)
+#     # Evaluate the model
+#     ## If the model does exist
+#     if theModel:
+#         ## If evaluation does exist
+#         if restDataframeMatter:
+#             evaluateModel(theModel, restDataframe, readmeFile, model_name)
+#         ## If evaluation doesn't exist
+#         elif not restDataframeMatter:
+#             readmeFile.writeEvaluation(model_name, "Evaluation", False)
+#         if not saveProphetModel(ModelPath, theModel, model_name):
+#             modelErrorDetect("Save Model error!", timeType, crimeType, locationType)
+#             return False
+#     elif not theModel:
+#         # When the model doesn't exist
+#         readmeFile.writeEvaluation(model_name, "Existance", False)
 
-    print("Done!")
-    return True
+#     print("Done!")
+#     return True
     
-# If you want to create a lot of the same location type
-def handleModels(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType, crimeType, locationType):
-    locationValues = []
-    if locationType == 'All':
-        return handleTheModel(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType, crimeType, locationType)
-    elif locationType == 'Community Area':
-        locationValues = [str(int(i)) for i in list(neededDf['Community Area'].drop_duplicates())]
-    elif locationType == 'District':
-        locationValues = [str(int(i)) for i in list(neededDf['District'].drop_duplicates())]
-    elif locationType == 'Street':
-        locationValues = list(neededDf['Street'].drop_duplicates())
-    elif locationType == 'Block':
-        locationValues = list(neededDf['Block'].drop_duplicates())
-    elif locationType == 'Ward':
-        locationValues = [str(int(i)) for i in list(neededDf['Ward'].drop_duplicates())]
-    else:
-        return False
+# # If you want to create a lot of the same location type
+# def handleModels(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType, crimeType, locationType):
+#     locationValues = []
+#     if locationType == 'All':
+#         return handleTheModel(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType, crimeType, locationType)
+#     elif locationType == 'Community Area':
+#         locationValues = [str(int(i)) for i in list(neededDf['Community Area'].drop_duplicates())]
+#     elif locationType == 'District':
+#         locationValues = [str(int(i)) for i in list(neededDf['District'].drop_duplicates())]
+#     elif locationType == 'Street':
+#         locationValues = list(neededDf['Street'].drop_duplicates())
+#     elif locationType == 'Block':
+#         locationValues = list(neededDf['Block'].drop_duplicates())
+#     elif locationType == 'Ward':
+#         locationValues = [str(int(i)) for i in list(neededDf['Ward'].drop_duplicates())]
+#     else:
+#         return False
     
-    for locationValue in locationValues:
-        handleTheModel(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType, crimeType, locationType, locationValue=locationValue)
+#     for locationValue in locationValues:
+#         handleTheModel(neededDf, Crime_data_2003_to_2004, ModelPath, readmeFile, timeType, crimeType, locationType, locationValue=locationValue)
         
-    return True
+#     return True
 
 
-# This generates a model based on what you get from the pridiction page
+# This generates a model based on what you get from the prediction page
 def getModelToUse(TimePrecision, CrimeTypeArray, LocationType, LocationValueArray):
-    TimePrecision_to_timeType_dict = {"Hour": "H", "Day": "D", "Month": "M", "Year": "Y"}
-    arrays = [False, False]
+    query = queryUtil.get_CrimeType_and_Location_query(CrimeTypeArray, LocationType, LocationValueArray)
+    theModel = createProphetModel(
+        dataAccess.return_dataFrames('Crime_data'),
+        dateUtil.TimePrecision_to_timeType_dict[TimePrecision],
+        query
+    )
+    return theModel
     
-    # Crime Types
-    if len(CrimeTypeArray) > 0:
-        for i in CrimeTypeArray:
-            arrays[0] = queryUtil.addAnd(
-                arrays[0],
-                queryUtil.createSingleSelection('Primary Type', i, toWhatIsStr=True, how="==")
-            )
-        arrays[0] = queryUtil.addParentheses(arrays[0])
-            
-    # Location Values
-    toWhatIsStr = True
-    if LocationType == 'District' or LocationType == 'Ward' or LocationType == 'Community Area' :
-        toWhatIsStr = False
-    if len(LocationValueArray) > 0:
-        for i in LocationValueArray:
-            arrays[1] = queryUtil.addAnd(
-                arrays[1],
-                queryUtil.createSingleSelection(LocationType, i, toWhatIsStr=toWhatIsStr, how="==")
-            )
-        arrays[1] = queryUtil.addParentheses(arrays[1])
+def getEvaluationModelToUse(TimePrecision, CrimeTypeArray, LocationType, LocationValueArray):
+    query = queryUtil.get_CrimeType_and_Location_query(CrimeTypeArray, LocationType, LocationValueArray)
+    theDataset_2003_to_2004, restDataExist = createDatasetForEvaluation(
+        dataAccess.return_dataFrames('Crime_data_2003_to_2004'),
+        dateUtil.TimePrecision_to_timeType_dict[TimePrecision],
+        query,
+    )
+    return theDataset_2003_to_2004, restDataExist
+

@@ -8,6 +8,8 @@ import datetime
 from dataAccess import return_dataFrames
 import pandas as pd
 import themeUtil
+import queryUtil
+import modelUtil
 
 import time
 
@@ -71,12 +73,18 @@ def predictPage():
             label="Display only " + mapType + ":", 
             options=options,
             default=options.loc[0],
-            help="Multi-select available; Empty for all"
+            help="Multi-select available  \n  Empty for all"
         )
         
         ## Submit button
         submitButton = st.form_submit_button('Generate Result')
-    
+        if submitButton:
+            st.write(queryUtil.get_CrimeType_and_Location_query(crimeTypeSelects, mapType, mapElementSelects))
+            model = modelUtil.getModelToUse(timePrecision, crimeTypeSelects, mapType, mapElementSelects)
+            st.write(model)
+            a, b = modelUtil.getEvaluationModelToUse(timePrecision, crimeTypeSelects, mapType, mapElementSelects)
+            if b:
+                st.info(modelUtil.evaluateModel(model, a))
     
     # Header
     st.header("Chicago Thefts Prediction")
