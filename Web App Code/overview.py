@@ -52,28 +52,8 @@ def overviewPage():
             # Apply Filter Button
             submitted = st.form_submit_button("Apply Filter")
             if submitted:
-                # Crime Type Query
-                crimeTypeQuery = ""
-                if len(crimeTypeSelects) > 0:
-                    for i in crimeTypeSelects:
-                        crimeTypeQuery = queryUtil.addOr(
-                            crimeTypeQuery, 
-                            queryUtil.createSingleSelection('Primary Type', i))
-                    crimeTypeQuery = queryUtil.addParentheses(crimeTypeQuery)
-                # Map Element Query
-                mapElementQuery = ""
-                if len(mapElementSelects) > 0:
-                    toWhatIsStr = True
-                    if mapGroupBy == 'District' or mapGroupBy == 'Ward' or mapGroupBy == 'Community Area' :
-                        toWhatIsStr = False
-                    for i in mapElementSelects:
-                        mapElementQuery = queryUtil.addOr(
-                            mapElementQuery, 
-                            queryUtil.createSingleSelection(mapGroupBy, i, toWhatIsStr=toWhatIsStr)
-                        )
-                    mapElementQuery = queryUtil.addParentheses(mapElementQuery)
                 # get selection
-                st.session_state['mapQuery'] = queryUtil.addAnd(crimeTypeQuery, mapElementQuery)
+                st.session_state['mapQuery'] =  queryUtil.get_CrimeType_and_Location_query(crimeTypeSelects, mapGroupBy, mapElementSelects)
                 #st.sidebar.text("..." + queryUtil.addAnd(crimeTypeQuery, mapElementQuery) + "...")
         #mapUtil.generateDataframe(Crime_data, mapGroupBy, 'Case Number')
         

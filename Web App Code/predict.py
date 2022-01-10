@@ -7,14 +7,14 @@ import dateUtil
 import datetime
 from dataAccess import return_dataFrames
 import pandas as pd
+import themeUtil
 
 import time
 
-def renderContent():
-    time.sleep(1)
-    st.image("https://pbs.twimg.com/media/CKZmyKmWwAESMX9.jpg")
-
 def predictPage():
+    
+    # Theme modifications
+    themeUtil.hide_st_form_border()
     
     # Sidebar options
     st.sidebar.write("---")
@@ -63,22 +63,37 @@ def predictPage():
     mapType = st.sidebar.selectbox(
         label="Map Type:", options=["District", "Ward", "Community Area", "Street", "Block"],
     )
-    ### ELement Select
-    options = pd.DataFrame(return_dataFrames('Crime_data')[mapType].drop_duplicates()).sort_values([mapType], ascending=True)
-    mapElementSelects = st.sidebar.multiselect(
-        label="Display only " + mapType + ":", 
-        options=options,
-        default=options.loc[0],
-        help="Multi-select available; Empty for all"
-    )
     
-    ## Submit button
-    submitButton = st.sidebar.button('Submit Button')
+    with st.sidebar.form('Location Settings'):
+        ### ELement Select
+        options = pd.DataFrame(return_dataFrames('Crime_data')[mapType].drop_duplicates()).sort_values([mapType], ascending=True)
+        mapElementSelects = st.multiselect(
+            label="Display only " + mapType + ":", 
+            options=options,
+            default=options.loc[0],
+            help="Multi-select available; Empty for all"
+        )
+        
+        ## Submit button
+        submitButton = st.form_submit_button('Generate Result')
     
     
     # Header
     st.header("Chicago Thefts Prediction")
     st.caption("We don't guarantee anything.")
     
-    if submitButton:
-        renderContent()
+    columns = st.columns(2)
+    with columns[0]:
+        st.write('Mosts')
+        
+    with columns[1]:
+        st.write("theMap")
+        
+    columns = st.columns(2)
+    with columns[0]:
+        st.write('Trends')
+        
+    with columns[1]:
+        st.write("the info map(optional)")
+        
+    

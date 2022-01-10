@@ -45,5 +45,5 @@ def hide_streamlit_header():
 def set_column_dashed():
     load_css(cssPath + 'column_dashed.css')
     
-def set_container_dashed():
-    load_css(cssPath + 'container_dashed.css')
+def hide_st_form_border():
+    load_css(cssPath + 'hide_st_form_border.css')
