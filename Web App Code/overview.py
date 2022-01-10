@@ -23,8 +23,10 @@ def overviewPage():
     st.sidebar.write("---")
     st.sidebar.subheader("Map Options:")
     # Map Group By
-    mapGroupBy = st.sidebar.selectbox(label="Map Type:", options=["District", "Ward", "Community Area", "Street", "Block"])
-    st.sidebar.warning("Viewing by all Streets or Blocks may slow down your computer since the number might be large! Please be careful!")
+    mapGroupBy = st.sidebar.selectbox(
+        label="Map Type:", options=["District", "Ward", "Community Area", "Street", "Block"],
+        help="Viewing by all Streets or Blocks may slow down your computer since the number might be large! Please be careful!"
+    )
     # Map Filter
     filterOn = st.sidebar.checkbox("Turn On Map Filter")
     if not filterOn:
@@ -34,17 +36,18 @@ def overviewPage():
         with st.sidebar.form("Map Element Select Form"):
             # Crime Type Select
             crimeTypeSelects = st.multiselect(
-                label="Crime Type: (empty for all)", 
+                label="Crime Type:", 
                 options=["THEFT", "BURGLARY", "MOTOR VEHICLE THEFT"],
-                help="Multi-select available",
+                help="Multi-select available; Empty for all",
                 default = "THEFT"
             )
             # ELement Select
             options = pd.DataFrame(return_dataFrames('Crime_data')[mapGroupBy].drop_duplicates()).sort_values([mapGroupBy], ascending=True)
             mapElementSelects = st.multiselect(
-                label="Display only " + mapGroupBy + ": (empty for all)", 
+                label="Display only " + mapGroupBy + ":", 
                 options=options,
-                default=options.loc[0]
+                default=options.loc[0],
+                help="Multi-select available; Empty for all"
             )
             # Apply Filter Button
             submitted = st.form_submit_button("Apply Filter")

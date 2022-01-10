@@ -32,15 +32,28 @@ def predictPage():
     if timeType == 'A Moment':
         st.sidebar.write("Select the moment you'd like to predict")
         startTime = dateUtil.customDatePicker(st.sidebar, '', timePrecision)
-        st.write(startTime)
+        #st.write(startTime)
     elif timeType == 'A Period':
         st.sidebar.write("Start Time:")
         startTime = dateUtil.customDatePicker(st.sidebar, '', timePrecision)
         st.sidebar.write("End Time:")
         endTime = dateUtil.customDatePicker(st.sidebar, ' ', timePrecision)
-        st.write(startTime)
-        st.write(endTime)
-        
+        #st.write(startTime)
+        #st.write(endTime)
+    
+    # Crime Type Settings
+    st.sidebar.header("Crime Type Settings")
+    # Crime Type Select
+    crimeTypeSelects = st.sidebar.multiselect(
+        label="Crime Type: (empty for all)", 
+        options=["THEFT", "BURGLARY", "MOTOR VEHICLE THEFT"],
+        help="Multi-select available",
+        default = ["THEFT", "BURGLARY", 'MOTOR VEHICLE THEFT']
+    )      
+    
+    # Location Settings
+    st.sidebar.header("Location Settings")    
+    
     # Header
     st.header("Chicago Thefts Prediction")
     st.caption("We don't guarantee anything.")
