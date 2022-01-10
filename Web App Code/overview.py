@@ -36,13 +36,15 @@ def overviewPage():
             crimeTypeSelects = st.multiselect(
                 label="Crime Type: (empty for all)", 
                 options=["THEFT", "BURGLARY", "MOTOR VEHICLE THEFT"],
-                help="Multi-select available"
+                help="Multi-select available",
+                default = "THEFT"
             )
             # ELement Select
             options = pd.DataFrame(return_dataFrames('Crime_data')[mapGroupBy].drop_duplicates()).sort_values([mapGroupBy], ascending=True)
             mapElementSelects = st.multiselect(
                 label="Display only " + mapGroupBy + ": (empty for all)", 
                 options=options,
+                default=options.loc[0]
             )
             # Apply Filter Button
             submitted = st.form_submit_button("Apply Filter")
