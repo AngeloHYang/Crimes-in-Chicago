@@ -347,7 +347,6 @@ def getEvaluationModelToUse(TimePrecision, CrimeTypeArray, LocationType, Locatio
 
 def predictMoment(model, moment):
     future = pd.DataFrame(columns=['ds'])
-    st.write(moment)
     future = future.append({'ds': moment}, ignore_index=True)
     user_forecast = model.predict(future)
     result = user_forecast['yhat'][0]

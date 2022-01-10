@@ -15,6 +15,84 @@ import numpy as np
 
 import time
 
+def modelEvaluations():
+    # # Read it 
+    mapType = st.session_state['predictPage']['mapType']
+    crimeTypeSelects = st.session_state['predictPage']['crimeTypeSelects']
+    if mapType != 'Whole City':
+        mapElementSelects = st.session_state['predictPage']['mapElementSelects']
+    # timeType = st.session_state['predictPage']['timeType']
+    timePrecision = st.session_state['predictPage']['timePrecision']
+    # startTime = st.session_state['predictPage']['startTime']
+    # if timeType == 'A Period':
+    #     endTime = st.session_state['predictPage']['endTime']
+    
+    # # init
+    # # False for not exist or error
+    # theSize = 1 if mapType == 'Whole City' else len(mapElementSelects)
+    
+    models = st.session_state['predictPage']['models']
+    modelTimeSpend = st.session_state['predictPage']['modelTimeSpend']
+    modelEvaluations = st.session_state['predictPage']['modelEvaluations']
+    
+    strings = []
+    modelString = ""
+    if mapType == 'Whole City':
+        modelString = ""
+        query = queryUtil.get_CrimeType_and_Location_query(crimeTypeSelects, mapType, [])
+        modelString += 'Model: ' + query
+        if models[0] == False:
+            modelString += ": False"
+            modelString += "  \n  "
+            modelString += " Time precision: " + timePrecision
+            modelString += "  \n  "
+        else:
+            modelString += ": True"
+            modelString += "  \n  "
+            modelString += " Time precision: " + timePrecision
+            modelString += "  \n  "
+            modelString += "Took: " + time.strftime("%H:%M:%S", time.gmtime(modelTimeSpend[0]))
+            modelString += "  \n  "
+            if modelEvaluations[0][1] == True:
+                modelString += modelUtil.evaluateModel(models[0], modelEvaluations[0][0])
+                modelString += "  \n  "
+            else:
+                modelString += "Evaluation: False  \n  "
+        modelString += "  \n  "
+        strings.append(modelString)
+    else:
+        for i in range(len(mapElementSelects)):
+            modelString = ""
+            query = queryUtil.get_CrimeType_and_Location_query(crimeTypeSelects, mapType, [mapElementSelects[i]])
+            modelString += 'Model: ' + query
+            if models[i] == False:
+                modelString += ": False"
+                modelString += "  \n  "
+                modelString += " Time precision: " + timePrecision
+                modelString += "  \n  "
+            else:
+                modelString += ": True"
+                modelString += "  \n  "
+                modelString += " Time precision: " + timePrecision
+                modelString += "  \n  "
+                modelString += "Took: " + time.strftime("%H:%M:%S", time.gmtime(modelTimeSpend[i]))
+                modelString += "  \n  "
+                if modelEvaluations[i][1] == True:
+                    modelString += modelUtil.evaluateModel(models[i], modelEvaluations[i][0])
+                    modelString += "  \n  "
+                else:
+                    modelString += "Evaluation: False  \n  "
+            modelString += "  \n  "
+            strings.append(modelString)
+    
+    
+    string = ""
+    for i in strings:
+        string += i
+    st.write(string)
+    
+            
+
 def handleData():
     # Read it 
     mapType = st.session_state['predictPage']['mapType']
@@ -93,6 +171,9 @@ def handleData():
                     dataframeOfTheElement[mapType] = mapElementSelects[i]
                     dataframe = dataframe.append(dataframeOfTheElement, ignore_index=True)
     
+    st.session_state['predictPage']['models'] = models
+    st.session_state['predictPage']['modelTimeSpend'] = modelTimeSpend
+    st.session_state['predictPage']['modelEvaluations'] = modelEvaluations
     st.session_state['predictPage']['dataframe'] = dataframe
 
 def timeError():
@@ -113,8 +194,9 @@ def preparedMapResult():
 def theLayout():
     columns = st.columns(2)
     preparedMapResult()
-    st.write('Really?')
-    st.write(st.session_state['predictPage']['dataframe'])
+    # st.write('Really?')
+    # st.write(st.session_state['predictPage']['dataframe'])
+    modelEvaluations()
     pass
 
 def predictPage():    
@@ -128,7 +210,7 @@ def predictPage():
     theEmptyPlace = st.empty()
     
     with theEmptyPlace:
-        st.write("Please head down to the sidebar to generate a result.")
+        st.info("Please head down to the sidebar to generate a result.")
     
     # Sidebar options
     st.sidebar.write("---")
