@@ -47,7 +47,17 @@ def generateTimeList(startTime, endTime, freq):
             
     return theList
         
-        
+def getFriendlyString(theTime, timePrecision):
+    string = ''
+    if timePrecision == 'Hour':
+        string = theTime.year + "-" + theTime.month + "-" + theTime.day + " " + theTime.hour + ":00"
+    elif timePrecision == 'Day':
+        string = theTime.year + "-" + theTime.month + "-" + theTime.day
+    elif timePrecision == 'Month':
+        string = theTime.year + "-" + theTime.month
+    elif timePrecision == 'Year':
+        string = theTime.year
+    return string
 
 def customDatePicker(container, labelName, limit='Day'):
     with container:

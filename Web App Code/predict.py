@@ -13,9 +13,11 @@ import modelUtil
 import util
 import numpy as np
 
-import time
+import time    
 
 def modelEvaluations():
+    st.write("About Models: ")
+    
     # # Read it 
     mapType = st.session_state['predictPage']['mapType']
     crimeTypeSelects = st.session_state['predictPage']['crimeTypeSelects']
@@ -111,7 +113,6 @@ def handleData():
     models = [False] * theSize
     modelTimeSpend = [False] * theSize
     modelEvaluations = [[False, False]] * theSize
-
     
     # Handle models and modelEvaluations
     if mapType == 'Whole City':
@@ -191,12 +192,45 @@ def preparedMapResult():
         return False
 
 
+def AMoment_TheWholeCity():
+    col = st.columns(2)
+            # st.session_state['predictPage'] = dict()
+            # st.session_state['predictPage']['mapType'] = mapType
+            # st.session_state['predictPage']['crimeTypeSelects'] = crimeTypeSelects
+            # if mapType != 'Whole City':
+            #     if len(mapElementSelects) == 0:
+            #         mapElementSelects = list(pd.DataFrame(return_dataFrames('Crime_data')[mapType].drop_duplicates()).sort_values([mapType], ascending=True)[mapType])
+            #     st.session_state['predictPage']['mapElementSelects'] = mapElementSelects
+            
+            # st.session_state['predictPage']['timeType'] = timeType
+            # st.session_state['predictPage']['timePrecision'] = timePrecision            
+            # if timeType == 'A Period':
+            #     st.session_state['predictPage']['endTime'] = endTime
+
+    theStr = str(dateUtil.getFriendlyString(st.session_state['predictPage']['startTime'], timePrecision=st.session_state['predictPage']['timePrecision']))
+
+    string1 = "On " + theStr + ", the number of crimes of "
+    crimeName = ""
+    if len(st.session_state['predictPage']['crimeTypeSelects']) == 2:
+        crimeName = st.session_state['predictPage']['crimeTypeSelects'][0] + " and " + st.session_state['predictPage']['crimeTypeSelects'][1] + " "
+    elif len(st.session_state['predictPage']['crimeTypeSelects']) == 1:
+        crimeName = st.session_state['predictPage']['crimeTypeSelects'][0] + " "
+    else:
+        crimeName = "all thefts related ones "
+    string2 = "is estimated to be " + str(st.session_state['predictPage']['dataframe']['Count'][0])
+    st.write(string1, crimeName, string2)
+    
+    modelEvaluations()
+
+def AMoment_Disrict_Ward_CommunityArea():
+    pass
+
 def theLayout():
     columns = st.columns(2)
-    preparedMapResult()
+    #preparedMapResult()
     # st.write('Really?')
-    # st.write(st.session_state['predictPage']['dataframe'])
-    modelEvaluations()
+    #st.text(st.session_state['predictPage']['dataframe'])
+    #modelEvaluations()
     pass
 
 def predictPage():    
@@ -224,8 +258,7 @@ def predictPage():
     timeType = st.sidebar.radio(label="Time Type", options=['A Moment', 'A Period'])
     ### Time Precision
     timePrecision = st.sidebar.select_slider(label="Time Precision", options=dateUtil.timePrecision[::-1])
-    
-    
+  
     
     # Time Input
     st.sidebar.subheader("Prediction Time")
@@ -298,7 +331,12 @@ def predictPage():
                     with st.container():
                         with st.spinner("Handling data..."):
                             handleData()
-                        theLayout()
+                        # Different layouts
+                        if timeType == 'A Moment' and  mapType == 'Whole City':
+                            AMoment_TheWholeCity()
+                        elif timeType == 'A Moment' and mapType != 'Street' and mapType != 'Block':
+                            AMoment_Disrict_Ward_CommunityArea()
+                            
 
             # Release memory
             del st.session_state['predictPage']
