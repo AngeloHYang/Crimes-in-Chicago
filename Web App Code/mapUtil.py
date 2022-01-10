@@ -120,9 +120,8 @@ def getLayer(dataFrame, lower, upper, radius=200, elevation_scale=40, get_positi
     )
     return theLayer
     
-
-def drawMap(dataFrame, locationType, init_latitude=41.7785, init_longitude=-87.7152, init_zoom=10, radius=-114514, expectatedMaxElevation=-114514):
-    
+@st.cache
+def drawMapCore(dataFrame, locationType, init_latitude=41.7785, init_longitude=-87.7152, init_zoom=10, radius=-114514, expectatedMaxElevation=-114514):
     # If radius == -114514, the function will decide for you
     # Get Lower upper
     cut_off = dataFrame['Count'].std() * 3
@@ -211,19 +210,27 @@ def drawMap(dataFrame, locationType, init_latitude=41.7785, init_longitude=-87.7
                 #swap = pd.a
                 #for i in
     #st.write("Size of layer: ", len(Layers))
+    
+    pdkDeck = pdk.Deck(
+        map_style='mapbox://styles/mapbox/light-v9',
+        tooltip={"text": popup_text},
+        initial_view_state=pdk.ViewState(
+        latitude=init_latitude,
+        longitude=init_longitude,
+        zoom=init_zoom,
+        pitch=50,
+    ), layers=[
+        getLayer(row, radius=radius, lower=lower, upper=upper) for index, row in dataFrame.iterrows()] 
+    )
+    
+    return pdkDeck
+
+def drawMap(dataFrame, locationType, init_latitude=41.7785, init_longitude=-87.7152, init_zoom=10, radius=-114514, expectatedMaxElevation=-114514):
+    
+    pdkDeck = drawMapCore(dataFrame, locationType, init_latitude, init_longitude, init_zoom, radius, expectatedMaxElevation)
 
     st.pydeck_chart(
-        pdk.Deck(
-            map_style='mapbox://styles/mapbox/light-v9',
-            tooltip={"text": popup_text},
-            initial_view_state=pdk.ViewState(
-            latitude=init_latitude,
-            longitude=init_longitude,
-            zoom=init_zoom,
-            pitch=50,
-        ), layers=[
-            getLayer(row, radius=radius, lower=lower, upper=upper) for index, row in dataFrame.iterrows()] 
-        )
+        pdkDeck
     )
     
 
