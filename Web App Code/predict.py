@@ -31,24 +31,25 @@ def predictPage():
     ### Time Precision
     timePrecision = st.sidebar.select_slider(label="Time Precision", options=dateUtil.timePrecision[::-1])
     
+    con = st.container()
     
-    ### Time Input
-    # st.sidebar.subheader("Prediction Time")
-    # howManyColumns = 2 if timePrecision == 'Hour' else 1
-    # inputColumns = st.sidebar.columns(howManyColumns)
-    # date_min_value = datetime.date(1970, 1, 1)
-    # date_max_value = datetime.date(2100, 12, 31)
-    # if timeType == 'A Moment':
-    #     st.sidebar.write("Select the moment you'd like to predict")
-    #     startTime = dateUtil.customDatePicker(st.sidebar, '', timePrecision)
-    #     #st.write(startTime)
-    # elif timeType == 'A Period':
-    #     st.sidebar.write("Start Time:")
-    #     startTime = dateUtil.customDatePicker(st.sidebar, '', timePrecision)
-    #     st.sidebar.write("End Time:")
-    #     endTime = dateUtil.customDatePicker(st.sidebar, ' ', timePrecision)
-    #     #st.write(startTime)
-    #     #st.write(endTime)
+    ## Time Input
+    st.sidebar.subheader("Prediction Time")
+    howManyColumns = 2 if timePrecision == 'Hour' else 1
+    inputColumns = st.sidebar.columns(howManyColumns)
+    date_min_value = datetime.date(1970, 1, 1)
+    date_max_value = datetime.date(2100, 12, 31)
+    if timeType == 'A Moment':
+        st.sidebar.write("Select the moment you'd like to predict")
+        startTime = dateUtil.customDatePicker(st.sidebar, '', timePrecision)
+        #st.write(startTime)
+    elif timeType == 'A Period':
+        st.sidebar.write("Start Time:")
+        startTime = dateUtil.customDatePicker(st.sidebar, '', timePrecision)
+        st.sidebar.write("End Time:")
+        endTime = dateUtil.customDatePicker(st.sidebar, ' ', timePrecision)
+        #st.write(startTime)
+        #st.write(endTime)
     
     # Crime Type Settings
     st.sidebar.header("Crime Type Settings")
@@ -79,12 +80,13 @@ def predictPage():
         ## Submit button
         submitButton = st.form_submit_button('Generate Result')
         if submitButton:
-            st.write(queryUtil.get_CrimeType_and_Location_query(crimeTypeSelects, mapType, mapElementSelects))
+            con.write(queryUtil.get_CrimeType_and_Location_query(crimeTypeSelects, mapType, mapElementSelects))
             model = modelUtil.getModelToUse(timePrecision, crimeTypeSelects, mapType, mapElementSelects)
-            st.write(model)
-            a, b = modelUtil.getEvaluationModelToUse(timePrecision, crimeTypeSelects, mapType, mapElementSelects)
-            if b:
-                st.info(modelUtil.evaluateModel(model, a))
+            #con.write(modelUtil.predictMoment(model, startTime))
+            if model != False:
+                con.write(modelUtil.predictPeriod(model, startTime, endTime, timePrecision))
+            else:
+                st.write("Model doesn't exist")
     
     # Header
     st.header("Chicago Thefts Prediction")

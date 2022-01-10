@@ -316,7 +316,7 @@ def return_dataFrames(dataframeName):
             theFile = pd.read_csv(fileName)
     return theFile
 
-#st.experimental_memo
+@st.experimental_memo
 def generateStreets(Crime_data):
     streetNames = []
     for i in Crime_data['Block']:
