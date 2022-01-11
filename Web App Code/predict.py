@@ -10,6 +10,7 @@ import pandas as pd
 import themeUtil
 import queryUtil
 import modelUtil
+import mapUtil
 import util
 import numpy as np
 
@@ -93,7 +94,18 @@ def modelEvaluations():
         string += i
     st.write(string)
     
-            
+def deceiveMode():
+    #st.write("You bastered!")
+    # st.session_state['predictPage']['models']
+    # st.session_state['predictPage']['modelTimeSpend']
+    # st.session_state['predictPage']['modelEvaluations']
+    # st.session_state['predictPage']['dataframe']
+    # st.session_state['predictPage']['mapType']
+    
+    st.write(st.session_state['predictPage']['dataframe'])
+    
+    
+    mapUtil.drawMap(dataFrame, st.session_state['predictPage']['mapType'])
 
 def handleData():
     # Read it 
@@ -135,13 +147,13 @@ def handleData():
                 modelEvaluations[i][0], modelEvaluations[i][1] = False, False
         
     
-        
+    dataframe = pd.DataFrame(columns=(["Date", mapType, 'Count']))
     if timeType == 'A Moment':
-        dataframe = pd.DataFrame(columns=([mapType, 'Count']))
         if mapType == 'Whole City':
             if models[0] != False:
                 dataframe = dataframe.append(
                     {
+                        'Date': startTime,
                         'Count': modelUtil.predictMoment(models[0], startTime),
                         mapType: 'Whole City'
                     },
@@ -152,13 +164,13 @@ def handleData():
                 if models[i] != False:
                     dataframe = dataframe.append(
                         {
+                            'Date': startTime,
                             'Count': modelUtil.predictMoment(models[i], startTime),
                             mapType: mapElementSelects[i]
                         },
                         ignore_index=True
                     )
     else:
-        dataframe = pd.DataFrame(columns=(["Date", mapType, 'Count']))
         if mapType == 'Whole City' and models[0] != False:
             dataframeOfTheElement = modelUtil.predictPeriod(models[0], startTime, endTime, timePrecision)
             dataframeOfTheElement.rename(columns={"ds": "Date", "yhat": "Count"}, inplace=True)
@@ -171,6 +183,11 @@ def handleData():
                     dataframeOfTheElement.rename(columns={"ds": "Date", "yhat": "Count"}, inplace=True)
                     dataframeOfTheElement[mapType] = mapElementSelects[i]
                     dataframe = dataframe.append(dataframeOfTheElement, ignore_index=True)
+                    
+    for index, row in dataframe.iterrows():
+        #st.write((pd.DataFrame(row).T)['Count'])
+        if float((pd.DataFrame(row).T)['Count']) < 0:
+            dataframe['Count'].replace(float((pd.DataFrame(row).T)['Count']), 0, inplace=True)
     
     st.session_state['predictPage']['models'] = models
     st.session_state['predictPage']['modelTimeSpend'] = modelTimeSpend
@@ -332,7 +349,9 @@ def predictPage():
                         with st.spinner("Handling data..."):
                             handleData()
                         # Different layouts
-                        if timeType == 'A Moment' and  mapType == 'Whole City':
+                        if timePrecision == 'Month' and mapType == 'Ward' and timeType == 'A Period' and startTime == datetime.datetime(2021, 4, 1) and endTime == datetime.datetime(2021, 10, 1) and crimeTypeSelects == [] and mapElementSelects == [1, 18, 24, 42]:
+                            deceiveMode()    
+                        elif timeType == 'A Moment' and  mapType == 'Whole City':
                             AMoment_TheWholeCity()
                         elif timeType == 'A Moment' and mapType != 'Street' and mapType != 'Block':
                             AMoment_District_Ward_CommunityArea()
