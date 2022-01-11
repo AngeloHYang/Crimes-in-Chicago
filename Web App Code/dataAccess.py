@@ -229,12 +229,8 @@ def create_dataFrames():
     ## District
     DistrictToCoordinates_max, DistrictToCoordinates_min, DistrictToCoordinates_mean, DistrictToCoordinates_closest, DistrictToCoordinates_most = util.create_dataframe_coordinate_max_min_mean_closest_most('District', Crime_data_fuller)
     ## Streets
-    streetNames = []
-    for i in Crime_data_fuller['Block']:
-            streetName = i.split(' ', 2)[2]
-            streetNames.append(streetName)
     newPd = Crime_data_fuller
-    newPd['Street'] = streetNames
+    newPd['Street'] = pd.DataFrame(generateStreets(newPd))
     StreetNameToCoordinates_max, StreetNameToCoordinates_min, StreetNameToCoordinates_mean, StreetNameToCoordinates_closest, StreetNameToCoordinates_most =  util.create_dataframe_coordinate_max_min_mean_closest_most('Street', newPd)
     ## Block
     BlockNameToCoordinates_max, BlockNameToCoordinates_min, BlockNameToCoordinates_mean, BlockNameToCoordinates_closest, BlockNameToCoordinates_most = util.create_dataframe_coordinate_max_min_mean_closest_most('Block', newPd)
@@ -327,7 +323,7 @@ def generateStreets(Crime_data):
         streetName = i.split(' ', 2)
         streetName = streetName[2]
         streetNames.append(streetName)
-    streetNames = list(dict.fromkeys(streetNames))
+    #streetNames = list(dict.fromkeys(streetNames))
     return streetNames
 
 
