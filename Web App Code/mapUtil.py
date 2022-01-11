@@ -47,6 +47,37 @@ def generateDataframe(dataframe, locationType, supportingCountOption='Case Numbe
         return False
     return dataframe
 
+def generateDataframeBasedOnPredictoinResult(dataframe,locationType, Date=False, onlyThisDate=False):
+    # To generate a dataframe to paint on map for model's result
+    # If onlyThisDate is on, it'll filter for data of only this date
+    if onlyThisDate == True:
+        dataframe = dataframe[dataframe['Date'] == Date]
+    
+    dataframe = dataframe[[locationType, 'Count']]
+    
+    if locationType == 'District':
+        extra = pd.DataFrame(return_dataFrames('DistrictToCoordinates_most'))
+        dataframe = pd.merge(dataframe, extra, on='District')
+        dataframe['District'] = dataframe.District.astype(str)
+    elif locationType == 'Street':
+        extra = pd.DataFrame(return_dataFrames('StreetNameToCoordinates_most'))
+        dataframe = pd.merge(dataframe, extra, on='Street')
+    elif locationType == 'Block':
+        extra = pd.DataFrame(return_dataFrames('BlockNameToCoordinates_most'))
+        dataframe = pd.merge(dataframe, extra, on='Block')
+    elif locationType == 'Community Area':
+        extra = pd.DataFrame(return_dataFrames('CommunityAreaToCoordinates_most'))
+        dataframe = pd.merge(dataframe, extra, on='Community Area')
+        dataframe['Community Area'] = dataframe['Community Area'].astype(int).astype(str)
+    elif locationType == 'Ward':
+        extra = pd.DataFrame(return_dataFrames('WardToCoordinates_most'))
+        dataframe = pd.merge(dataframe, extra, on='Ward')
+        dataframe['Ward'] = dataframe.Ward.astype(str)
+    else:
+        return False
+    return dataframe
+    
+
 # If log is True, theValue will be logged here
 def getColorValue(theValue, lower, upper, log=False):
     # Green: rgba(67,198,148,255)

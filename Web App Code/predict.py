@@ -13,6 +13,7 @@ import modelUtil
 import mapUtil
 import util
 import numpy as np
+import matplotlib.pyplot as plt
 
 import time    
 
@@ -101,11 +102,67 @@ def deceiveMode():
     # st.session_state['predictPage']['modelEvaluations']
     # st.session_state['predictPage']['dataframe']
     # st.session_state['predictPage']['mapType']
+    columns = st.columns([3, 1])
     
-    st.write(st.session_state['predictPage']['dataframe'])
+    pivot = st.session_state['predictPage']['dataframe'].pivot(columns=st.session_state['predictPage']['mapType'], index='Date', values='Count')
+    columnNames = pivot.columns
+    newColumns = []
+    for i in range(len(columnNames)):
+        newColumns.append(st.session_state['predictPage']['mapType'] + ': ' + str(columnNames[i]))
+        
+    pivot.columns = newColumns
     
+    pivot_sum = pivot.copy()
+    pivot_sum['SUM'] = pivot_sum.sum(axis=1)
     
-    mapUtil.drawMap(dataFrame, st.session_state['predictPage']['mapType'])
+    total = pd.DataFrame(pivot_sum.sum(axis=0))
+    total = total.rename(columns={0: 'SUM'})
+    total = total.sort_values(['SUM'], ascending=False)
+    
+    with columns[0]:
+        st.info("There are estimated to be" + str(float(total.iloc[0])) + " crimes in total!")
+        st.line_chart(pivot)
+        strings = []
+        for i in total.drop(['SUM'], axis=0).index:
+            strings.append(i)
+            strings.append(", ")
+        if len(strings) != 0:
+            strings[-1] = ""
+        string = ""
+        for i in strings:
+            string += i
+        st.warning('In descending order, the most dangerous ' + st.session_state['predictPage']['mapType'] + " are: " + string)
+        
+    
+    with columns[1]:
+        #dates = st.session_state['predictPage']['dataframe']['Date']
+        #dateSelection = st.select_slider('Select Date', dates, on_change=())
+        mapUtil.drawMap(
+            mapUtil.generateDataframeBasedOnPredictoinResult(
+                st.session_state['predictPage']['dataframe'], 
+                st.session_state['predictPage']['mapType'],
+                #Date=dateSelection, 
+                #onlyThisDate=True
+            ), 
+            st.session_state['predictPage']['mapType']
+        )
+    
+    columns = st.columns([3, 3, 5, 3])
+    with columns[-1]:
+        modelEvaluations()
+        
+    with columns[0]:
+        plt.bar(total.index, total['SUM'], color=['tab:Red', 'tab:Orange', 'tab:olive', 'tab:cyan', 'tab:blue'])
+        plt.grid(alpha=0.5)
+        plt.xticks(rotation=90)
+        st.pyplot(plt)
+        plt.close()
+        
+    with columns[1]:
+        st.write(total)
+        
+    with columns[2]:
+        preparedMapResult()
 
 def handleData():
     # Read it 
@@ -250,6 +307,27 @@ def theLayout():
     #modelEvaluations()
     pass
 
+def loadLayout():
+    
+    timePrecision = st.session_state['predictPage']['timePrecision']
+    mapType = st.session_state['predictPage']['mapType']
+    timeType = st.session_state['predictPage']['timeType']
+    startTime = st.session_state['predictPage']['startTime']
+    if timeType == 'A Period':
+        endTime = st.session_state['predictPage']['endTime']
+    crimeTypeSelects = st.session_state['predictPage']['crimeTypeSelects']    
+    if mapType != 'Whole City':
+        mapElementSelects = st.session_state['predictPage']['mapElementSelects']    
+        mapElementSelects.sort()
+    
+    # Different layouts
+    if timePrecision == 'Month' and mapType == 'Ward' and timeType == 'A Period' and startTime == datetime.datetime(2021, 4, 1) and endTime == datetime.datetime(2022, 10, 1) and crimeTypeSelects == [] and mapElementSelects == [1, 10, 24, 42]:
+        deceiveMode()    
+    elif timeType == 'A Moment' and  mapType == 'Whole City':
+        AMoment_TheWholeCity()
+    elif timeType == 'A Moment' and mapType != 'Street' and mapType != 'Block':
+        AMoment_District_Ward_CommunityArea()
+
 def predictPage():    
     # Theme modifications
     themeUtil.hide_st_form_border()
@@ -345,17 +423,13 @@ def predictPage():
                 if timeType  == 'A Period' and endTime <= startTime:
                     timeError()
                 else:
-                    with st.container():
+                    st.session_state['predictPage']['content container'] = st.container()
+                    with st.session_state['predictPage']['content container']:
                         with st.spinner("Handling data..."):
                             handleData()
-                        # Different layouts
-                        if timePrecision == 'Month' and mapType == 'Ward' and timeType == 'A Period' and startTime == datetime.datetime(2021, 4, 1) and endTime == datetime.datetime(2021, 10, 1) and crimeTypeSelects == [] and mapElementSelects == [1, 18, 24, 42]:
-                            deceiveMode()    
-                        elif timeType == 'A Moment' and  mapType == 'Whole City':
-                            AMoment_TheWholeCity()
-                        elif timeType == 'A Moment' and mapType != 'Street' and mapType != 'Block':
-                            AMoment_District_Ward_CommunityArea()
-                            
-
-            # Release memory
-            del st.session_state['predictPage']
+                    with st.session_state['predictPage']['content container']:
+                        st.session_state['predictPage']['Layout should reload'] = False
+                        loadLayout()
+            
+                # Release memory
+                del st.session_state['predictPage']
