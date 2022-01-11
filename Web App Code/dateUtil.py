@@ -56,7 +56,7 @@ def getFriendlyString(theTime, timePrecision):
     elif timePrecision == 'Month':
         string = theTime.year + "-" + theTime.month
     elif timePrecision == 'Year':
-        string = theTime.year
+        string = "the year" + theTime.year
     return string
 
 def customDatePicker(container, labelName, limit='Day'):
