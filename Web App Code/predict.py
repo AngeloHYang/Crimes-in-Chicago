@@ -222,7 +222,7 @@ def AMoment_TheWholeCity():
     
     modelEvaluations()
 
-def AMoment_Disrict_Ward_CommunityArea():
+def AMoment_District_Ward_CommunityArea():
     pass
 
 def theLayout():
@@ -335,7 +335,7 @@ def predictPage():
                         if timeType == 'A Moment' and  mapType == 'Whole City':
                             AMoment_TheWholeCity()
                         elif timeType == 'A Moment' and mapType != 'Street' and mapType != 'Block':
-                            AMoment_Disrict_Ward_CommunityArea()
+                            AMoment_District_Ward_CommunityArea()
                             
 
             # Release memory
